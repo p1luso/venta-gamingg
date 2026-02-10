@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
@@ -13,12 +13,12 @@ export class EncryptionService implements OnModuleInit {
     const keyString = this.configService.get<string>('ENCRYPTION_KEY');
     
     if (!keyString) {
-      throw new Error('ENCRYPTION_KEY is not defined in environment variables');
+      throw new InternalServerErrorException('ENCRYPTION_KEY is not defined in environment variables');
     }
 
     // Strict validation: Key must be exactly 32 bytes
     if (keyString.length !== 32) {
-      throw new Error(`ENCRYPTION_KEY must be exactly 32 bytes long. Received ${keyString.length} bytes.`);
+      throw new InternalServerErrorException(`ENCRYPTION_KEY must be exactly 32 bytes long. Received ${keyString.length} bytes.`);
     }
 
     this.key = Buffer.from(keyString);
