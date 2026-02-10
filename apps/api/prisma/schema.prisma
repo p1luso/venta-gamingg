@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum TransferStatus {
+  WAITING_CREDS
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  ERROR
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+  orders        Order[]
+
+  @@map("users")
+}
+
+model Order {
+  id                   String         @id @default(uuid())
+  user_id              String
+  user                 User           @relation(fields: [user_id], references: [id])
+  amount_coins         Int
+  price_paid           Decimal        @db.Decimal(10, 2)
+  payment_status       PaymentStatus  @default(PENDING)
+  transfer_status      TransferStatus @default(WAITING_CREDS)
+  fut_transfer_id      String?
+  ea_account_encrypted String? // Encrypted JSON blob of credentials
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+
+  @@map("orders")
+}
