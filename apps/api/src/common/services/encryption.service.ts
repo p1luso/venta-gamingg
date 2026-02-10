@@ -4,22 +4,24 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class EncryptionService implements OnModuleInit {
-  private algorithm = 'aes-256-cbc';
+  private readonly algorithm = 'aes-256-cbc';
   private key: Buffer;
 
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
     const keyString = this.configService.get<string>('ENCRYPTION_KEY');
+    
     if (!keyString) {
       throw new Error('ENCRYPTION_KEY is not defined in environment variables');
     }
-    // Ensure key is 32 bytes (256 bits)
-    // We assume the key in env is a hex string or we hash it to ensure length
-    // For safety, let's assume it's a 32-byte hex string or base64. 
-    // If it's a plain string, we might want to hash it.
-    // Here we will use scrypt to derive a key from the secret
-    this.key = crypto.scryptSync(keyString, 'salt', 32);
+
+    // Strict validation: Key must be exactly 32 bytes
+    if (keyString.length !== 32) {
+      throw new Error(`ENCRYPTION_KEY must be exactly 32 bytes long. Received ${keyString.length} bytes.`);
+    }
+
+    this.key = Buffer.from(keyString);
   }
 
   encrypt(text: string): string {
