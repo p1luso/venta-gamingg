@@ -10,10 +10,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PaymentStatus {
-  PENDING
+enum OrderStatus {
+  PENDING_PAYMENT
+  PENDING_APPROVAL
   PAID
-  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  STRIPE
+  MERCADOPAGO
+  TRANSFER
 }
 
 enum TransferStatus {
@@ -27,7 +34,7 @@ enum TransferStatus {
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
-  password_hash String
+  password_hash String?
   created_at    DateTime @default(now())
   orders        Order[]
 
@@ -40,7 +47,11 @@ model Order {
   user                 User           @relation(fields: [user_id], references: [id])
   amount_coins         Int
   price_paid           Decimal        @db.Decimal(10, 2)
-  payment_status       PaymentStatus  @default(PENDING)
+  status               OrderStatus    @default(PENDING_PAYMENT)
+  paymentMethod        PaymentMethod
+  proofImageUrl        String?
+  stripePaymentId      String?
+  mpPreferenceId       String?
   transfer_status      TransferStatus @default(WAITING_CREDS)
   fut_transfer_id      String?
   ea_account_encrypted String? // Encrypted JSON blob of credentials

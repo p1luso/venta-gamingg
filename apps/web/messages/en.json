@@ -1,0 +1,72 @@
+{
+  "Navbar": {
+    "searchPlaceholder": "Search for games, coins, accounts...",
+    "login": "Login"
+  },
+  "Home": {
+    "liveMarketPrices": "Live Market Prices",
+    "dominateMarket": "Dominate the <br /> <span class=\"text-[#00FF88] not-italic\">FC 26</span> Market",
+    "description": "The world's most trusted platform for FC 26 Coins. Fast, secure, and always at the best market price.",
+    "happyCustomers": "40K+ Happy Customers",
+    "rating": "★★★★★ 4.8/5 Rating",
+    "howItWorks": "How it works",
+    "howItWorksDesc": "Simple steps to get your coins instantly",
+    "step1Title": "Choose Amount",
+    "step1Desc": "Select platform, standard method, and amount of coins.",
+    "step2Title": "Make Payment",
+    "step2Desc": "Securely pay using your preferred method (Stripe, MP or Transfer).",
+    "step3Title": "Get Coins",
+    "step3Desc": "Instant delivery. Enjoy your game immediately.",
+    "features": {
+      "safeTitle": "Safe & Secure",
+      "safeDesc": "Encrypted transactions & anti-ban protection",
+      "instantTitle": "Instant Delivery",
+      "instantDesc": "Coins delivered within 5-30 minutes",
+      "supportTitle": "24/7 Support",
+      "supportDesc": "Professional team ready to help you",
+      "pricesTitle": "Best Prices",
+      "pricesDesc": "Competitive market rates updated daily"
+    }
+  },
+  "Calculator": {
+    "stockAvailable": "Stock Available",
+    "buyCoins": "Buy Coins",
+    "sellCoins": "Sell Coins",
+    "selectAmount": "Select Amount",
+    "bestRate": "Best Rate",
+    "addForBonus": "Add {amount}K for Bonus 🎁",
+    "bonusUnlocked": "Bonus Unlocked! 🎉",
+    "deliveryTime": "Delivery Time",
+    "deliveryTimeValue": "15-60 MINS",
+    "platform": "Platform",
+    "platformValue": "ALL CONSOLES",
+    "checkoutNow": "Checkout Now",
+    "securePayment": "Secure payment with Stripe & Mercado Pago. 24/7 Support available."
+  },
+  "Checkout": {
+    "backToHome": "Back to Home",
+    "secureCheckout": "Secure Checkout",
+    "contactInfo": "Contact Information",
+    "enterEmail": "Enter your email address",
+    "privacy": "Your privacy is our priority. No spam, ever.",
+    "paymentMethod": "Select Payment Method",
+    "creditCard": "Credit / Debit Card",
+    "mercadoPago": "Mercado Pago",
+    "bankTransfer": "Bank Transfer",
+    "bankDetails": "Bank Details",
+    "uploadReceipt": "Upload Receipt",
+    "dragDrop": "Drag & drop or click to upload",
+    "orderSummary": "Order Summary",
+    "quantity": "Quantity",
+    "subtotal": "Subtotal",
+    "serviceFee": "Service Fee",
+    "free": "FREE",
+    "totalToPay": "Total to pay",
+    "sslSecure": "SSL Secure Payment",
+    "verifiedStock": "Verified Stock",
+    "payNow": "Pay Now",
+    "terms": "By clicking \"Pay Now\", you agree to our Terms of Service.",
+    "orderReceived": "Order Received!",
+    "thankYou": "Thank you for your purchase. We're processing your coins now. You'll receive an email shortly."
+  }
+}
