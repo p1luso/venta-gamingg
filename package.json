@@ -1,0 +1,13 @@
+{
+  "name": "venta-gaming-monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Building monorepo...'",
+    "install:all": "npm install --workspaces"
+  },
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ]
+}

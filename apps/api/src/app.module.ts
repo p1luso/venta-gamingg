@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { OrdersModule } from './orders/orders.module';
 import { TransferModule } from './transfer/transfer.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { TransferModule } from './transfer/transfer.module';
       isGlobal: true,
     }),
     PrismaModule,
+    AuthModule,
     OrdersModule,
     TransferModule,
   ],

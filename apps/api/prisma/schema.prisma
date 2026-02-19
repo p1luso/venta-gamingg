@@ -27,6 +27,7 @@ enum TransferStatus {
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
+  username      String?  // Made optional or required depending on logic, added to match Auth logic
   password_hash String
   created_at    DateTime @default(now())
   orders        Order[]
