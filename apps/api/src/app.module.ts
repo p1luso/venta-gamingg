@@ -12,10 +12,17 @@ import { AuthModule } from './auth/auth.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     OrdersModule,
     TransferModule,
+    AuthModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

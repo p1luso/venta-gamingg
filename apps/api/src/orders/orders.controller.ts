@@ -13,4 +13,9 @@ export class OrdersController {
   create(@GetUser() user: { userId: string; email: string }, @Body() createOrderDto: CreateOrderDto) {
     return this.ordersService.create(user.userId, createOrderDto);
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.ordersService.findOne(id);
+  }
 }
