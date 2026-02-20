@@ -1,9 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus } from '@prisma/client';
+import { PaymentStatus } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class PaymentService {
@@ -23,8 +22,8 @@ export class PaymentService {
     await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        proofImageUrl: filePath,
-        status: OrderStatus.PENDING_APPROVAL,
+        proof_image_url: filePath,
+        payment_status: PaymentStatus.PENDING_APPROVAL,
       },
     });
 
@@ -52,35 +51,33 @@ export class PaymentService {
     return await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        status: OrderStatus.PAID,
+        payment_status: PaymentStatus.PAID,
       },
     });
   }
 
-  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT) // Default to monthly, prompt asked for "every 15 days"
-  // Let's use custom cron for 15 days: '0 0 */15 * *'
   @Cron('0 0 */15 * *')
   async cleanupProofImages() {
     this.logger.log('Starting cleanup of old proof images...');
     
     const finishedOrders = await this.prisma.order.findMany({
       where: {
-        status: OrderStatus.PAID,
-        proofImageUrl: { not: null },
+        payment_status: PaymentStatus.PAID,
+        proof_image_url: { not: null },
       },
     });
 
     for (const order of finishedOrders) {
-      if (order.proofImageUrl && fs.existsSync(order.proofImageUrl)) {
+      if (order.proof_image_url && fs.existsSync(order.proof_image_url)) {
         try {
-          fs.unlinkSync(order.proofImageUrl);
+          fs.unlinkSync(order.proof_image_url);
           await this.prisma.order.update({
             where: { id: order.id },
-            data: { proofImageUrl: null },
+            data: { proof_image_url: null },
           });
           this.logger.log(`Deleted proof image for order ${order.id}`);
         } catch (error) {
-          this.logger.error(`Failed to delete file ${order.proofImageUrl}: ${error.message}`);
+          this.logger.error(`Failed to delete file ${order.proof_image_url}: ${error.message}`);
         }
       }
     }

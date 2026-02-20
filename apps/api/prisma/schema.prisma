@@ -12,6 +12,7 @@ datasource db {
 
 enum PaymentStatus {
   PENDING
+  PENDING_APPROVAL
   PAID
   FAILED
 }
@@ -45,6 +46,7 @@ model Order {
   transfer_status      TransferStatus @default(WAITING_CREDS)
   fut_transfer_id      String?
   ea_account_encrypted String? // Encrypted JSON blob of credentials
+  proof_image_url      String?
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt
 

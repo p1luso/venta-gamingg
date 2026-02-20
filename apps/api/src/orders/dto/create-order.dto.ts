@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import { IsNotEmpty, IsNumber, IsPositive, Min, Max } from 'class-validator';
-=======
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
-import { PaymentMethod } from '@prisma/client';
->>>>>>> 4926076eb1aee4db97092974a7a3015efdada044
 
 export class CreateOrderDto {
   @IsNumber()
