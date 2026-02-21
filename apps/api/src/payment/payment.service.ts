@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentStatus } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as fs from 'fs';
 
@@ -22,8 +22,8 @@ export class PaymentService {
     await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        proof_image_url: filePath,
-        payment_status: PaymentStatus.PENDING_APPROVAL,
+        proofImageUrl: filePath,
+        status: OrderStatus.PENDING_APPROVAL,
       },
     });
 
@@ -51,7 +51,7 @@ export class PaymentService {
     return await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        payment_status: PaymentStatus.PAID,
+        status: OrderStatus.PAID,
       },
     });
   }
@@ -62,22 +62,22 @@ export class PaymentService {
     
     const finishedOrders = await this.prisma.order.findMany({
       where: {
-        payment_status: PaymentStatus.PAID,
-        proof_image_url: { not: null },
+        status: OrderStatus.PAID,
+        proofImageUrl: { not: null },
       },
     });
 
     for (const order of finishedOrders) {
-      if (order.proof_image_url && fs.existsSync(order.proof_image_url)) {
+      if (order.proofImageUrl && fs.existsSync(order.proofImageUrl)) {
         try {
-          fs.unlinkSync(order.proof_image_url);
+          fs.unlinkSync(order.proofImageUrl);
           await this.prisma.order.update({
             where: { id: order.id },
-            data: { proof_image_url: null },
+            data: { proofImageUrl: null },
           });
           this.logger.log(`Deleted proof image for order ${order.id}`);
         } catch (error) {
-          this.logger.error(`Failed to delete file ${order.proof_image_url}: ${error.message}`);
+          this.logger.error(`Failed to delete file ${order.proofImageUrl}: ${error.message}`);
         }
       }
     }

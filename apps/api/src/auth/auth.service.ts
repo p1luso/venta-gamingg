@@ -57,7 +57,7 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.password_hash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -76,5 +76,20 @@ export class AuthService {
         email: user.email,
       }
     };
+  }
+
+  async validateOAuthUser(email: string) {
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+        },
+      });
+    }
+    return user;
   }
 }

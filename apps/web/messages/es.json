@@ -1,0 +1,72 @@
+{
+  "Navbar": {
+    "searchPlaceholder": "Buscar juegos, monedas, cuentas...",
+    "login": "Ingresar"
+  },
+  "Home": {
+    "liveMarketPrices": "Precios de Mercado en Vivo",
+    "dominateMarket": "Dominá el Mercado de <br /> <span class=\"text-[#00FF88] not-italic\">FC 26</span>",
+    "description": "La plataforma más confiable del mundo para Monedas FC 26. Rápido, seguro y siempre al mejor precio.",
+    "happyCustomers": "40K+ Clientes Felices",
+    "rating": "★★★★★ 4.8/5 Calificación",
+    "howItWorks": "Cómo funciona",
+    "howItWorksDesc": "Pasos simples para obtener tus monedas al instante",
+    "step1Title": "Elige Cantidad",
+    "step1Desc": "Selecciona plataforma, método estándar y cantidad de monedas.",
+    "step2Title": "Realiza el Pago",
+    "step2Desc": "Paga de forma segura usando tu método preferido (Stripe, MP o Transferencia).",
+    "step3Title": "Recibe Monedas",
+    "step3Desc": "Entrega inmediata. Disfruta de tu juego al instante.",
+    "features": {
+      "safeTitle": "Seguro y Confiable",
+      "safeDesc": "Transacciones encriptadas y protección anti-ban",
+      "instantTitle": "Entrega Inmediata",
+      "instantDesc": "Monedas entregadas en 5-30 minutos",
+      "supportTitle": "Soporte 24/7",
+      "supportDesc": "Equipo profesional listo para ayudarte",
+      "pricesTitle": "Mejores Precios",
+      "pricesDesc": "Tasas de mercado competitivas actualizadas diariamente"
+    }
+  },
+  "Calculator": {
+    "stockAvailable": "Stock Disponible",
+    "buyCoins": "Comprar Monedas",
+    "sellCoins": "Vender Monedas",
+    "selectAmount": "Elige Cantidad",
+    "bestRate": "Mejor Precio",
+    "addForBonus": "Agregá {amount}K para Bono 🎁",
+    "bonusUnlocked": "¡Bono Desbloqueado! 🎉",
+    "deliveryTime": "Tiempo de Entrega",
+    "deliveryTimeValue": "15-60 MINS",
+    "platform": "Plataforma",
+    "platformValue": "TODAS LAS CONSOLAS",
+    "checkoutNow": "Comprar Ahora",
+    "securePayment": "Pago seguro con Stripe y Mercado Pago. Soporte 24/7 disponible."
+  },
+  "Checkout": {
+    "backToHome": "Volver al Inicio",
+    "secureCheckout": "Pago Seguro",
+    "contactInfo": "Información de Contacto",
+    "enterEmail": "Ingresa tu correo electrónico",
+    "privacy": "Tu privacidad es nuestra prioridad. Sin spam, nunca.",
+    "paymentMethod": "Elige Método de Pago",
+    "creditCard": "Tarjeta de Crédito / Débito",
+    "mercadoPago": "Mercado Pago",
+    "bankTransfer": "Transferencia Bancaria",
+    "bankDetails": "Datos Bancarios",
+    "uploadReceipt": "Subir Comprobante",
+    "dragDrop": "Arrastra o haz clic para subir",
+    "orderSummary": "Resumen del Pedido",
+    "quantity": "Cantidad",
+    "subtotal": "Subtotal",
+    "serviceFee": "Tarifa de Servicio",
+    "free": "GRATIS",
+    "totalToPay": "Total a pagar",
+    "sslSecure": "Pago Seguro SSL",
+    "verifiedStock": "Stock Verificado",
+    "payNow": "Pagar Ahora",
+    "terms": "Al hacer clic en \"Pagar Ahora\", aceptas nuestros Términos de Servicio.",
+    "orderReceived": "¡Pedido Recibido!",
+    "thankYou": "Gracias por tu compra. Estamos procesando tus monedas ahora. Recibirás un correo en breve."
+  }
+}

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentStatus, TransferStatus } from '@prisma/client';
+import { OrderStatus, TransferStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -12,8 +12,17 @@ export class OrdersService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createOrderDto: CreateOrderDto) {
-    const { coin_amount } = createOrderDto;
+  async create(createOrderDto: CreateOrderDto) {
+    const { coin_amount, paymentMethod, user_email } = createOrderDto;
+    
+    // Find or create user
+    let user = await this.prisma.user.findUnique({ where: { email: user_email } });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: { email: user_email },
+      });
+    }
+    const userId = user.id;
     
     // Zero-Trust: Calculate price on backend
     const price_paid = this.calculatePrice(coin_amount);
@@ -25,7 +34,8 @@ export class OrdersService {
         user_id: userId,
         amount_coins: coin_amount,
         price_paid: price_paid,
-        payment_status: PaymentStatus.PENDING,
+        status: OrderStatus.PENDING_PAYMENT,
+        paymentMethod: paymentMethod,
         transfer_status: TransferStatus.WAITING_CREDS,
       },
     });
@@ -36,7 +46,7 @@ export class OrdersService {
         id: order.id,
         amount_coins: order.amount_coins,
         price_paid: order.price_paid,
-        status: order.payment_status,
+        status: order.status,
       }
     };
   }
