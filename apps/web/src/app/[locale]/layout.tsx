@@ -18,6 +18,8 @@ export const metadata = {
   description: "The best place to buy FC 26 Coins",
 };
 
+import Navbar from "@/components/Navbar";
+
 export default async function LocaleLayout({
   children,
   params
@@ -35,6 +37,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0A] text-white`}>
         <NextIntlClientProvider messages={messages}>
+          <Navbar />
           {children}
         </NextIntlClientProvider>
       </body>

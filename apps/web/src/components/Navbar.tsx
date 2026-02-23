@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, Globe, ChevronDown, LogIn } from 'lucide-react';
+import { Search, Globe, ChevronDown, LogIn, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,12 +10,21 @@ import { usePathname, useRouter } from 'next/navigation';
 export default function Navbar() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string } | null>(null);
   const t = useTranslations('Navbar');
   const pathname = usePathname();
   const router = useRouter();
 
   // Get current locale from pathname
   const currentLocale = pathname.split('/')[1] || 'es';
+
+  React.useEffect(() => {
+    // Check for user in localStorage or Cookie (Mock implementation)
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const switchLocale = (newLocale: string) => {
     const path = pathname.split('/').slice(2).join('/');
@@ -36,7 +45,7 @@ export default function Navbar() {
             </div>
           </div>
           <span className="text-xl font-black tracking-tighter text-white uppercase italic">
-            Venta<span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">Gaming</span>
+            Venta<span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">Gamingg</span>
           </span>
         </Link>
 
@@ -92,16 +101,27 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.href = 'http://localhost:3001/api/v1/auth/google'}
-            className="flex items-center gap-2 bg-[#00FF88] text-black px-6 py-2.5 rounded-full font-black text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all relative overflow-hidden group/btn"
-          >
-            <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 skew-x-12" />
-            <LogIn className="w-4 h-4 relative z-10" />
-            <span className="relative z-10">{t('login')}</span>
-          </motion.button>
+          {user ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 bg-white/10 text-white px-6 py-2.5 rounded-full font-black text-sm uppercase italic tracking-wide hover:bg-white/20 transition-all border border-white/10"
+            >
+              <User className="w-4 h-4" />
+              <span>{user.name || t('myAccount') || 'Mi Cuenta'}</span>
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.href = 'http://localhost:3001/api/v1/auth/google'}
+              className="flex items-center gap-2 bg-[#00FF88] text-black px-6 py-2.5 rounded-full font-black text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all relative overflow-hidden group/btn"
+            >
+              <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 skew-x-12" />
+              <LogIn className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">{t('login')}</span>
+            </motion.button>
+          )}
         </div>
       </div>
     </nav>

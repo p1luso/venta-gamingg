@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
 import { 
   CreditCard, 
   Upload, 
@@ -16,6 +16,20 @@ import {
   X
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+// Custom Icons
+const StripeIcon = () => (
+  <svg viewBox="0 0 40 40" className="w-6 h-6" fill="currentColor">
+    <path d="M13.9 19.5h12.2c0-3.3-2.5-4.5-5.6-4.5-2.6 0-5 1-6.5 2.1l-2.5-4.2C14.1 11.1 18 9.5 22 9.5c8.3 0 12.8 4.2 12.8 11.8v10h-6.8v-2.3c-1.9 2-4.6 3.1-7.7 3.1-5.7 0-9.7-3.2-9.7-8.2 0-5.4 4.8-8 13.1-8.2V15c0-1.7-1.3-2.7-3.8-2.7-2.1 0-4 .7-5.3 1.6l-1.5 3.3.8 2.3zM28 23v-1c-4.4.2-6.5 1.5-6.5 3.7 0 1.8 1.4 2.8 3.5 2.8 3 0 3 .2 3-5.5z"/>
+  </svg>
+);
+
+const MercadoPagoIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
+    <path d="M14.6 12.4c0 .8-.5 1.4-1.1 1.6l4.3 8h-3l-3.3-6.5h-1.3v6.5h-2.5v-16h4.5c2.1 0 3.7 1.1 3.7 3.2 0 1.5-.9 2.7-2.3 3.2zM12.7 8h-2v2.5h2c.8 0 1.4-.5 1.4-1.2 0-.8-.6-1.3-1.4-1.3z"/>
+    <path d="M5.5 18h2.8l2.5-12h-3L5.5 18z" opacity=".5"/>
+  </svg>
+);
 
 type PaymentMethod = 'STRIPE' | 'MERCADOPAGO' | 'TRANSFER';
 
@@ -35,48 +49,30 @@ function CheckoutContent() {
   const coins = searchParams.get('coins') || '0';
   const price = searchParams.get('price') || '0';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const selectedFile = acceptedFiles[0];
     if (selectedFile) {
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
     }
-  };
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'image/*': [], 'application/pdf': [] },
+    multiple: false,
+  });
 
   const handlePayNow = async () => {
     if (!email) return;
     setLoading(true);
     
-    try {
-      const response = await fetch('http://localhost:3001/api/v1/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coin_amount: parseInt(coins),
-          price_paid: parseFloat(price),
-          user_email: email,
-          paymentMethod: method,
-        }),
-      });
-
-      const order = await response.json();
-
-      if (method === 'TRANSFER' && file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        await fetch(`http://localhost:3001/api/v1/payments/transfer/${order.id}/proof`, {
-          method: 'POST',
-          body: formData,
-        });
-      }
-
+    // Simulate backend call (since backend is ignored for now)
+    setTimeout(() => {
       setIsSuccess(true);
-      setTimeout(() => router.push(`/${locale}`), 3000);
-    } catch (error) {
-      console.error('Checkout error:', error);
-    } finally {
       setLoading(false);
-    }
+      setTimeout(() => router.push(`/${locale}`), 3000);
+    }, 2000);
   };
 
   if (isSuccess) {
@@ -118,13 +114,13 @@ function CheckoutContent() {
               <div className="w-8 h-8 rounded-lg bg-[#00FF88]/10 flex items-center justify-center text-[#00FF88] font-bold text-sm">1</div>
               <h2 className="text-xl font-bold text-white uppercase tracking-tight">{t('contactInfo')}</h2>
             </div>
-            <div className="bg-[#111111] border border-white/5 rounded-[0.75rem] p-6">
+            <div className="bg-[#161616] border border-white/5 rounded-[0.75rem] p-6">
               <input
                 type="email"
                 placeholder={t('enterEmail')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-6 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF88]/50 transition-all"
+                className="w-full bg-[#0D0D0D] border border-white/5 rounded-xl py-4 px-6 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF88] transition-all"
               />
               <p className="mt-4 text-xs text-gray-500 flex items-center gap-2">
                 <ShieldCheck className="w-3 h-3" /> {t('privacy')}
@@ -143,14 +139,14 @@ function CheckoutContent() {
               <PaymentOption 
                 active={method === 'STRIPE'} 
                 onClick={() => setMethod('STRIPE')}
-                icon={<CreditCard className="w-6 h-6" />}
+                icon={<StripeIcon />}
                 title={t('creditCard')}
                 subtitle="Powered by Stripe"
               />
               <PaymentOption 
                 active={method === 'MERCADOPAGO'} 
                 onClick={() => setMethod('MERCADOPAGO')}
-                icon={<Wallet className="w-6 h-6" />}
+                icon={<MercadoPagoIcon />}
                 title={t('mercadoPago')}
                 subtitle="Local Payments (ARS)"
               />
@@ -171,11 +167,11 @@ function CheckoutContent() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-[#111111] border border-white/5 rounded-[0.75rem] p-8 mt-4 space-y-8">
+                    <div className="bg-[#161616] border border-white/5 rounded-[0.75rem] p-8 mt-4 space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('bankDetails')}</h3>
-                          <div className="space-y-2 font-mono text-sm bg-black/40 p-4 rounded-xl border border-white/5">
+                          <div className="space-y-2 font-mono text-sm bg-[#0D0D0D] p-4 rounded-xl border border-white/5">
                             <p className="text-white flex justify-between"><span className="text-gray-500">Alias:</span> VENTA.GAMING.OK</p>
                             <p className="text-white flex justify-between"><span className="text-gray-500">Holder:</span> Santiago G.</p>
                             <p className="text-white flex justify-between"><span className="text-gray-500">CBU:</span> 00000031000...</p>
@@ -199,13 +195,22 @@ function CheckoutContent() {
                                 </div>
                               </div>
                             ) : (
-                              <label className="flex flex-col items-center justify-center aspect-video border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-[#00FF88] hover:bg-[#00FF88]/5 transition-all group relative overflow-hidden">
+                              <div 
+                                {...getRootProps()}
+                                className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
+                                  isDragActive 
+                                    ? 'border-[#00FF88] bg-[#00FF88]/10' 
+                                    : 'border-white/10 hover:border-[#00FF88] hover:bg-[#00FF88]/5'
+                                }`}
+                              >
+                                <input {...getInputProps()} />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-[#00FF88]/0 via-[#00FF88]/0 to-[#00FF88]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <Upload className="w-10 h-10 text-gray-600 mb-4 group-hover:text-[#00FF88] group-hover:scale-110 transition-all duration-300" />
-                                <span className="text-sm font-bold text-gray-400 group-hover:text-white transition-colors">{t('dragDrop')}</span>
+                                <Upload className={`w-10 h-10 mb-4 transition-all duration-300 ${isDragActive ? 'text-[#00FF88] scale-110' : 'text-gray-600 group-hover:text-[#00FF88] group-hover:scale-110'}`} />
+                                <span className={`text-sm font-bold transition-colors ${isDragActive ? 'text-[#00FF88]' : 'text-gray-400 group-hover:text-white'}`}>
+                                  {isDragActive ? 'Drop it here!' : t('dragDrop')}
+                                </span>
                                 <span className="text-[10px] text-gray-600 mt-1 uppercase font-black tracking-widest group-hover:text-[#00FF88]/70 transition-colors">PNG, JPG or PDF</span>
-                                <input type="file" className="hidden" onChange={handleFileChange} accept="image/*,.pdf" />
-                              </label>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -309,7 +314,7 @@ function PaymentOption({
       className={`flex items-center gap-6 p-6 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${
         active 
           ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]' 
-          : 'bg-[#111111] border-white/5 hover:border-white/10'
+          : 'bg-[#161616] border-white/5 hover:border-white/10'
       }`}
     >
       {highlight && !active && (
@@ -338,7 +343,6 @@ function PaymentOption({
 export default function CheckoutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A] selection:bg-[#00FF88] selection:text-black">
-      <Navbar />
       <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-10 h-10 text-[#00FF88] animate-spin" /></div>}>
         <CheckoutContent />
       </Suspense>

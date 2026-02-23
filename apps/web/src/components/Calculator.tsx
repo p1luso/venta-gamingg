@@ -3,44 +3,64 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ArrowRightLeft, Info, TrendingUp } from 'lucide-react';
+import { ShoppingCart, ArrowRightLeft, Info, TrendingUp, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-const COIN_PRICE_PER_MILLION = 15.50;
+const COIN_PRICE_PER_MILLION_PC = 13.50; // Example lower price for PC
+const COIN_PRICE_PER_MILLION_CONSOLE = 15.50; // PS/Xbox
 
 export default function Calculator() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'es';
   const t = useTranslations('Calculator');
+  
   const [coins, setCoins] = useState(500000);
-  const [totalPrice, setTotalPrice] = useState((500000 / 1000000) * COIN_PRICE_PER_MILLION);
+  const [platform, setPlatform] = useState<'console' | 'pc'>('console');
+  const [totalPrice, setTotalPrice] = useState(0);
   const [type, setType] = useState<'buy' | 'sell'>('buy');
+  const [isLoading, setIsLoading] = useState(false);
 
   const MAX_COINS = 4000000;
   const MIN_COINS = 100000;
-  const BONUS_THRESHOLD = 1000000; // Bonus starts at 1M
+  const BONUS_THRESHOLD = 1000000;
 
   useEffect(() => {
-    setTotalPrice((coins / 1000000) * COIN_PRICE_PER_MILLION);
-  }, [coins]);
+    const pricePerMillion = platform === 'pc' ? COIN_PRICE_PER_MILLION_PC : COIN_PRICE_PER_MILLION_CONSOLE;
+    setTotalPrice((coins / 1000000) * pricePerMillion);
+  }, [coins, platform]);
+
+  const getDeliveryTime = () => {
+    if (coins < 500000) return '15-30 MINS';
+    if (coins < 2000000) return '30-60 MINS';
+    return '1-2 HOURS';
+  };
 
   const handleBuyNow = () => {
-    router.push(`/${locale}/checkout?coins=${coins}&price=${totalPrice.toFixed(2)}`);
+    setIsLoading(true);
+    // Simulate a small delay for the animation
+    setTimeout(() => {
+      router.push(`/${locale}/checkout?coins=${coins}&price=${totalPrice.toFixed(2)}&platform=${platform}`);
+    }, 800);
   };
 
   const getProgress = () => ((coins - MIN_COINS) / (MAX_COINS - MIN_COINS)) * 100;
   const getBonusProgress = () => Math.min((coins / BONUS_THRESHOLD) * 100, 100);
   const coinsNeededForBonus = Math.max(0, BONUS_THRESHOLD - coins);
+  const bonusAmount = (coins * 0.05 / 1000).toFixed(0);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md bg-[#111111] rounded-[0.75rem] border border-white/5 p-8 shadow-2xl relative overflow-hidden group/card"
-    >
-      {/* Background Glow */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#00FF88]/10 blur-[100px] group-hover/card:bg-[#00FF88]/20 transition-colors duration-700" />
+    <AnimatePresence mode="wait">
+      {!isLoading && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md bg-[#161616] rounded-[0.75rem] border border-white/5 p-8 shadow-2xl relative overflow-hidden group/card"
+        >
+          {/* Background Glow */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#00FF88]/10 blur-[100px] group-hover/card:bg-[#00FF88]/20 transition-colors duration-700" />
       
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
@@ -52,15 +72,17 @@ export default function Calculator() {
         </div>
       </div>
 
-      {/* Bonus Progress Bar (Venta Gamingg Feature) */}
+      {/* Bonus Progress Bar */}
       <div className="mb-8 p-3 rounded-lg bg-white/5 border border-white/10 relative overflow-hidden">
         <div className="flex justify-between items-center mb-2 relative z-10">
           <span className="text-[10px] font-bold text-gray-400 uppercase">
             {coinsNeededForBonus > 0 
               ? t('addForBonus', { amount: (coinsNeededForBonus / 1000).toFixed(0) }) 
-              : t('bonusUnlocked')}
+              : t('bonusUnlocked', { bonus: bonusAmount })}
           </span>
-          <span className="text-[10px] font-bold text-[#00FF88]">{getBonusProgress().toFixed(0)}%</span>
+          <span className="text-[10px] font-bold text-[#00FF88]">
+            {coinsNeededForBonus > 0 ? '5%' : `+${bonusAmount}K`}
+          </span>
         </div>
         <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden relative z-10">
           <motion.div 
@@ -70,7 +92,6 @@ export default function Calculator() {
             transition={{ duration: 0.5 }}
           />
         </div>
-        {/* Confetti effect on background if bonus unlocked */}
         {coinsNeededForBonus === 0 && (
           <div className="absolute inset-0 bg-yellow-500/10 animate-pulse" />
         )}
@@ -106,18 +127,19 @@ export default function Calculator() {
             <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block">{t('selectAmount')}</label>
             <div className="flex items-baseline gap-2">
               <input
-                type="number"
-                value={coins}
+                type="text"
+                value={coins.toLocaleString('de-DE')}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value);
+                  const rawValue = e.target.value.replace(/\./g, '');
+                  const val = parseInt(rawValue);
                   if (!isNaN(val)) {
                     if (val > MAX_COINS) setCoins(MAX_COINS);
                     else setCoins(val);
-                  } else {
+                  } else if (rawValue === '') {
                     setCoins(0);
                   }
                 }}
-                className="text-5xl font-black text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-[220px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="text-5xl font-black text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-[280px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <span className="text-[#00FF88] font-black text-xs uppercase italic tracking-tighter">FC 26</span>
             </div>
@@ -161,23 +183,33 @@ export default function Calculator() {
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
                 <Info className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('deliveryTime')}</span>
             </div>
-            <span className="text-sm font-black text-white italic">{t('deliveryTimeValue')}</span>
+            <span className="text-sm font-black text-white italic">{getDeliveryTime()}</span>
           </div>
-          <div className="bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+          
+          {/* Platform Selector */}
+          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 focus-within:border-[#00FF88] transition-colors relative group">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 rounded-lg bg-[#00FF88]/10 text-[#00FF88]">
                 <TrendingUp className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('platform')}</span>
             </div>
-            <span className="text-sm font-black text-white italic">{t('platformValue')}</span>
+            <select 
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value as 'console' | 'pc')}
+              className="w-full bg-transparent text-sm font-black text-white italic outline-none cursor-pointer appearance-none"
+            >
+              <option value="console" className="bg-zinc-900 text-white">PlayStation / Xbox</option>
+              <option value="pc" className="bg-zinc-900 text-white">PC</option>
+            </select>
+            {/* Custom arrow if needed, but select default is okay for MVP */}
           </div>
         </div>
 
@@ -187,20 +219,52 @@ export default function Calculator() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleBuyNow}
-            className="w-full bg-[#00FF88] hover:shadow-[0_20px_40px_rgba(0,255,136,0.2)] text-black py-5 rounded-[0.75rem] font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all relative overflow-hidden group/btn"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-[#00FF88] to-[#00CC6A] hover:shadow-[0_0_20px_rgba(0,255,136,0.3)] text-black py-5 rounded-[0.75rem] font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-all relative overflow-hidden group/btn disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 skew-x-12" />
-            <ShoppingCart className="w-5 h-5 fill-black" />
-            <span className="relative z-10 italic text-lg">{t('checkoutNow')}</span>
+            {isLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5 fill-black" />
+                <span className="relative z-10 italic text-lg">{t('checkoutNow')}</span>
+              </>
+            )}
           </motion.button>
 
           <div className="flex items-center justify-center gap-6 opacity-40 hover:opacity-100 transition-opacity duration-500">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="Paypal" className="h-4 grayscale hover:grayscale-0 transition-all" />
+            {/* Removed PayPal */}
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3 grayscale hover:grayscale-0 transition-all" />
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4 grayscale hover:grayscale-0 transition-all" />
           </div>
         </div>
-      </div>
-    </motion.div>
+        </div>
+      </motion.div>
+      )}
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="w-full max-w-md h-[600px] bg-[#111111] rounded-[0.75rem] border border-white/5 p-8 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 className="w-12 h-12 text-[#00FF88]" />
+          </motion.div>
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-4 text-white font-black italic uppercase tracking-widest"
+          >
+            {t('processing') || 'Processing...'}
+          </motion.p>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
