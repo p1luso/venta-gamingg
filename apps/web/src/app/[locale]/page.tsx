@@ -63,7 +63,7 @@ export default function Home() {
               </div>
               
               <h1 
-                className="text-6xl md:text-8xl font-black text-white italic tracking-tighter leading-[0.9] mb-8 uppercase"
+                className="text-5xl md:text-6xl lg:text-8xl font-black text-white italic tracking-tighter leading-[0.9] mb-8 uppercase"
                 dangerouslySetInnerHTML={{ __html: t.raw('dominateMarket') }}
               />
               

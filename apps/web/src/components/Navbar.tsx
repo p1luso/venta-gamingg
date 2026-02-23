@@ -34,17 +34,17 @@ export default function Navbar() {
 
   return (
     <nav className="h-20 border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-      <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href={`/${currentLocale}`} className="flex items-center gap-2 group">
-          <div className="relative w-10 h-10">
+          <div className="relative w-8 h-8 md:w-10 md:h-10">
             <div className="absolute inset-0 bg-[#00FF88] rounded-xl rotate-0 group-hover:rotate-6 transition-transform duration-300" />
             <div className="absolute inset-0 bg-[#00FF88]/20 rounded-xl rotate-0 group-hover:-rotate-6 transition-transform duration-300 backdrop-blur-sm" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-black font-black text-xl italic relative z-10">V</span>
+              <span className="text-black font-black text-lg md:text-xl italic relative z-10">V</span>
             </div>
           </div>
-          <span className="text-xl font-black tracking-tighter text-white uppercase italic">
+          <span className="text-lg md:text-xl font-black tracking-tighter text-white uppercase italic">
             Venta<span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">Gamingg</span>
           </span>
         </Link>
@@ -115,11 +115,11 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => window.location.href = 'http://localhost:3001/api/v1/auth/google'}
-              className="flex items-center gap-2 bg-[#00FF88] text-black px-6 py-2.5 rounded-full font-black text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all relative overflow-hidden group/btn"
+              className="flex items-center gap-2 bg-[#00FF88] text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-xs md:text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all relative overflow-hidden group/btn"
             >
               <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 skew-x-12" />
               <LogIn className="w-4 h-4 relative z-10" />
-              <span className="relative z-10">{t('login')}</span>
+              <span className="relative z-10 hidden sm:inline">{t('login')}</span>
             </motion.button>
           )}
         </div>

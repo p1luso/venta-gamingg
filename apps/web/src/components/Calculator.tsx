@@ -16,7 +16,7 @@ export default function Calculator() {
   const t = useTranslations('Calculator');
   
   const [coins, setCoins] = useState(500000);
-  const [platform, setPlatform] = useState<'console' | 'pc'>('console');
+  const [platform, setPlatform] = useState<'ps' | 'xbox' | 'pc'>('ps');
   const [totalPrice, setTotalPrice] = useState(0);
   const [type, setType] = useState<'buy' | 'sell'>('buy');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function Calculator() {
   useEffect(() => {
     const pricePerMillion = platform === 'pc' ? COIN_PRICE_PER_MILLION_PC : COIN_PRICE_PER_MILLION_CONSOLE;
     setTotalPrice((coins / 1000000) * pricePerMillion);
-  }, [coins, platform]);
+  }, [coins, platform, type]);
 
   const getDeliveryTime = () => {
     if (coins < 500000) return '15-30 MINS';
@@ -57,7 +57,7 @@ export default function Calculator() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-md bg-[#161616] rounded-[0.75rem] border border-white/5 p-8 shadow-2xl relative overflow-hidden group/card"
+          className="w-full max-w-md bg-[#161616] rounded-[0.75rem] border border-white/5 p-5 md:p-8 shadow-2xl relative overflow-hidden group/card"
         >
           {/* Background Glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#00FF88]/10 blur-[100px] group-hover/card:bg-[#00FF88]/20 transition-colors duration-700" />
@@ -122,8 +122,8 @@ export default function Calculator() {
 
       <div className="space-y-8">
         {/* Input Header */}
-        <div className="flex justify-between items-end">
-          <div className="space-y-1">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-0">
+          <div className="space-y-1 w-full">
             <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block">{t('selectAmount')}</label>
             <div className="flex items-baseline gap-2">
               <input
@@ -139,13 +139,13 @@ export default function Calculator() {
                     setCoins(0);
                   }
                 }}
-                className="text-5xl font-black text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-[280px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="text-4xl sm:text-5xl font-black text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-full md:w-[280px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-[#00FF88] font-black text-xs uppercase italic tracking-tighter">FC 26</span>
+              <span className="text-[#00FF88] font-black text-xs uppercase italic tracking-tighter shrink-0">FC 26</span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[#00FF88]/10 text-[#00FF88] text-[10px] font-black mb-2 uppercase italic border border-[#00FF88]/20">
+          <div className="w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end gap-4 md:gap-0">
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[#00FF88]/10 text-[#00FF88] text-[10px] font-black mb-0 md:mb-2 uppercase italic border border-[#00FF88]/20 whitespace-nowrap">
               <TrendingUp className="w-3 h-3" />
               <span>{t('bestRate')}</span>
             </div>
@@ -181,35 +181,43 @@ export default function Calculator() {
           />
         </div>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
-            <div className="flex items-center gap-2 mb-2">
+        {/* Info Grid - Responsive Stack */}
+        <div className="space-y-3">
+          {/* Platform Selector */}
+          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors relative group">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-[#00FF88]/10 text-[#00FF88]">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('platform')}</span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {(['ps', 'xbox', 'pc'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPlatform(p)}
+                  className={`py-3 sm:py-2 px-1 rounded-lg text-xs sm:text-[10px] md:text-xs font-black uppercase italic transition-all border ${
+                    platform === p 
+                      ? 'bg-[#00FF88] text-black border-[#00FF88] shadow-[0_0_15px_rgba(0,255,136,0.3)]' 
+                      : 'bg-black/20 text-gray-500 border-white/5 hover:border-white/10 hover:text-gray-300'
+                  }`}
+                >
+                  {p === 'ps' ? 'PlayStation' : p === 'xbox' ? 'Xbox' : 'PC'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery Time */}
+          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
                 <Info className="w-3.5 h-3.5" />
               </div>
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('deliveryTime')}</span>
             </div>
             <span className="text-sm font-black text-white italic">{getDeliveryTime()}</span>
-          </div>
-          
-          {/* Platform Selector */}
-          <div className="bg-[#0D0D0D] p-4 rounded-xl border border-white/5 hover:border-white/10 focus-within:border-[#00FF88] transition-colors relative group">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 rounded-lg bg-[#00FF88]/10 text-[#00FF88]">
-                <TrendingUp className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('platform')}</span>
-            </div>
-            <select 
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value as 'console' | 'pc')}
-              className="w-full bg-transparent text-sm font-black text-white italic outline-none cursor-pointer appearance-none"
-            >
-              <option value="console" className="bg-zinc-900 text-white">PlayStation / Xbox</option>
-              <option value="pc" className="bg-zinc-900 text-white">PC</option>
-            </select>
-            {/* Custom arrow if needed, but select default is okay for MVP */}
           </div>
         </div>
 
