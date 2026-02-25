@@ -4,12 +4,12 @@ import React, { useState, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { 
-  CreditCard, 
-  Upload, 
-  ShieldCheck, 
-  ArrowLeft, 
-  CheckCircle2, 
+import {
+  CreditCard,
+  Upload,
+  ShieldCheck,
+  ArrowLeft,
+  CheckCircle2,
   Loader2,
   Wallet,
   Building2,
@@ -20,14 +20,14 @@ import { useTranslations } from 'next-intl';
 // Custom Icons
 const StripeIcon = () => (
   <svg viewBox="0 0 40 40" className="w-6 h-6" fill="currentColor">
-    <path d="M13.9 19.5h12.2c0-3.3-2.5-4.5-5.6-4.5-2.6 0-5 1-6.5 2.1l-2.5-4.2C14.1 11.1 18 9.5 22 9.5c8.3 0 12.8 4.2 12.8 11.8v10h-6.8v-2.3c-1.9 2-4.6 3.1-7.7 3.1-5.7 0-9.7-3.2-9.7-8.2 0-5.4 4.8-8 13.1-8.2V15c0-1.7-1.3-2.7-3.8-2.7-2.1 0-4 .7-5.3 1.6l-1.5 3.3.8 2.3zM28 23v-1c-4.4.2-6.5 1.5-6.5 3.7 0 1.8 1.4 2.8 3.5 2.8 3 0 3 .2 3-5.5z"/>
+    <path d="M13.9 19.5h12.2c0-3.3-2.5-4.5-5.6-4.5-2.6 0-5 1-6.5 2.1l-2.5-4.2C14.1 11.1 18 9.5 22 9.5c8.3 0 12.8 4.2 12.8 11.8v10h-6.8v-2.3c-1.9 2-4.6 3.1-7.7 3.1-5.7 0-9.7-3.2-9.7-8.2 0-5.4 4.8-8 13.1-8.2V15c0-1.7-1.3-2.7-3.8-2.7-2.1 0-4 .7-5.3 1.6l-1.5 3.3.8 2.3zM28 23v-1c-4.4.2-6.5 1.5-6.5 3.7 0 1.8 1.4 2.8 3.5 2.8 3 0 3 .2 3-5.5z" />
   </svg>
 );
 
 const MercadoPagoIcon = () => (
   <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-    <path d="M14.6 12.4c0 .8-.5 1.4-1.1 1.6l4.3 8h-3l-3.3-6.5h-1.3v6.5h-2.5v-16h4.5c2.1 0 3.7 1.1 3.7 3.2 0 1.5-.9 2.7-2.3 3.2zM12.7 8h-2v2.5h2c.8 0 1.4-.5 1.4-1.2 0-.8-.6-1.3-1.4-1.3z"/>
-    <path d="M5.5 18h2.8l2.5-12h-3L5.5 18z" opacity=".5"/>
+    <path d="M14.6 12.4c0 .8-.5 1.4-1.1 1.6l4.3 8h-3l-3.3-6.5Ñh-1.3v6.5h-2.5v-16h4.5c2.1 0 3.7 1.1 3.7 3.2 0 1.5-.9 2.7-2.3 3.2zM12.7 8h-2v2.5h2c.8 0 1.4-.5 1.4-1.2 0-.8-.6-1.3-1.4-1.3z" />
+    <path d="M5.5 18h2.8l2.5-12h-3L5.5 18z" opacity=".5" />
   </svg>
 );
 
@@ -66,7 +66,7 @@ function CheckoutContent() {
   const handlePayNow = async () => {
     if (!email) return;
     setLoading(true);
-    
+
     // Simulate backend call (since backend is ignored for now)
     setTimeout(() => {
       setIsSuccess(true);
@@ -77,7 +77,7 @@ function CheckoutContent() {
 
   if (isSuccess) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex-1 flex flex-col items-center justify-center text-center p-6"
@@ -134,24 +134,24 @@ function CheckoutContent() {
               <div className="w-8 h-8 rounded-lg bg-[#00FF88]/10 flex items-center justify-center text-[#00FF88] font-bold text-sm">2</div>
               <h2 className="text-xl font-bold text-white uppercase tracking-tight">{t('paymentMethod')}</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-4">
-              <PaymentOption 
-                active={method === 'STRIPE'} 
+              <PaymentOption
+                active={method === 'STRIPE'}
                 onClick={() => setMethod('STRIPE')}
                 icon={<StripeIcon />}
                 title={t('creditCard')}
                 subtitle="Powered by Stripe"
               />
-              <PaymentOption 
-                active={method === 'MERCADOPAGO'} 
+              <PaymentOption
+                active={method === 'MERCADOPAGO'}
                 onClick={() => setMethod('MERCADOPAGO')}
                 icon={<MercadoPagoIcon />}
                 title={t('mercadoPago')}
                 subtitle="Local Payments (ARS)"
               />
-              <PaymentOption 
-                active={method === 'TRANSFER'} 
+              <PaymentOption
+                active={method === 'TRANSFER'}
                 onClick={() => setMethod('TRANSFER')}
                 icon={<Building2 className="w-6 h-6" />}
                 title={t('bankTransfer')}
@@ -186,7 +186,7 @@ function CheckoutContent() {
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={preview} alt="Proof" className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <button 
+                                  <button
                                     onClick={() => { setFile(null); setPreview(null); }}
                                     className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-transform hover:scale-110 shadow-lg"
                                   >
@@ -195,13 +195,12 @@ function CheckoutContent() {
                                 </div>
                               </div>
                             ) : (
-                              <div 
+                              <div
                                 {...getRootProps()}
-                                className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
-                                  isDragActive 
-                                    ? 'border-[#00FF88] bg-[#00FF88]/10' 
+                                className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-xl cursor-pointer transition-all group relative overflow-hidden ${isDragActive
+                                    ? 'border-[#00FF88] bg-[#00FF88]/10'
                                     : 'border-white/10 hover:border-[#00FF88] hover:bg-[#00FF88]/5'
-                                }`}
+                                  }`}
                               >
                                 <input {...getInputProps()} />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-[#00FF88]/0 via-[#00FF88]/0 to-[#00FF88]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -227,7 +226,7 @@ function CheckoutContent() {
         <div className="lg:col-span-4">
           <div className="bg-[#111111] border border-white/5 rounded-[0.75rem] p-8 sticky top-32 space-y-8">
             <h2 className="text-xl font-black text-white italic uppercase tracking-tighter">{t('orderSummary')}</h2>
-            
+
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500 font-medium">{t('quantity')}</span>
@@ -268,11 +267,10 @@ function CheckoutContent() {
               whileTap={{ scale: 0.98 }}
               onClick={handlePayNow}
               disabled={loading || !email}
-              className={`w-full py-5 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
-                loading || !email 
-                  ? 'bg-white/5 text-gray-600 cursor-not-allowed' 
+              className={`w-full py-5 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${loading || !email
+                  ? 'bg-white/5 text-gray-600 cursor-not-allowed'
                   : 'bg-[#00FF88] text-black shadow-[0_0_30px_rgba(0,255,136,0.3)]'
-              }`}
+                }`}
             >
               {loading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -293,47 +291,44 @@ function CheckoutContent() {
   );
 }
 
-function PaymentOption({ 
-  active, 
-  onClick, 
-  icon, 
-  title, 
-  subtitle, 
-  highlight 
-}: { 
-  active: boolean, 
-  onClick: () => void, 
-  icon: React.ReactNode, 
-  title: string, 
+function PaymentOption({
+  active,
+  onClick,
+  icon,
+  title,
+  subtitle,
+  highlight
+}: {
+  active: boolean,
+  onClick: () => void,
+  icon: React.ReactNode,
+  title: string,
   subtitle: string,
   highlight?: boolean
 }) {
   return (
-    <button 
+    <button
       onClick={onClick}
-      className={`flex items-center gap-6 p-6 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${
-        active 
-          ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]' 
+      className={`flex items-center gap-6 p-6 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${active
+          ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]'
           : 'bg-[#161616] border-white/5 hover:border-white/10'
-      }`}
+        }`}
     >
       {highlight && !active && (
         <div className="absolute top-0 right-0 bg-[#00FF88] text-black text-[10px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">
           Recommended
         </div>
       )}
-      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${
-        active ? 'bg-[#00FF88] text-black' : 'bg-white/5 text-gray-400 group-hover:text-white'
-      }`}>
+      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${active ? 'bg-[#00FF88] text-black' : 'bg-white/5 text-gray-400 group-hover:text-white'
+        }`}>
         {icon}
       </div>
       <div className="flex-1">
         <h3 className="font-black text-white uppercase tracking-tight italic">{title}</h3>
         <p className="text-xs text-gray-500 font-bold">{subtitle}</p>
       </div>
-      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-        active ? 'border-[#00FF88] bg-[#00FF88]' : 'border-white/10'
-      }`}>
+      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${active ? 'border-[#00FF88] bg-[#00FF88]' : 'border-white/10'
+        }`}>
         {active && <CheckCircle2 className="w-4 h-4 text-black" />}
       </div>
     </button>

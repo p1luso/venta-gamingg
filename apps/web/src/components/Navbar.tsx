@@ -67,12 +67,13 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex items-center gap-6">
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsLangOpen(!isLangOpen)}
-              className="hidden md:flex items-center gap-1.5 hover:text-white transition-colors text-sm font-medium text-gray-400"
+              className="flex items-center gap-1.5 hover:text-white transition-colors text-sm font-medium text-gray-400"
             >
               <Globe className="w-4 h-4" />
-              {currentLocale === 'en' ? 'EN / USD' : 'ES / USD'}
+              <span className="hidden sm:inline">{currentLocale === 'en' ? 'EN / USD' : 'ES / USD'}</span>
+              <span className="sm:hidden">{currentLocale.toUpperCase()}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -84,13 +85,13 @@ export default function Navbar() {
                   exit={{ opacity: 0, y: 10 }}
                   className="absolute top-full right-0 mt-2 w-32 bg-[#111111] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50"
                 >
-                  <button 
+                  <button
                     onClick={() => switchLocale('en')}
                     className={`w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition-colors ${currentLocale === 'en' ? 'text-[#00FF88] font-bold' : 'text-gray-400'}`}
                   >
                     English (EN)
                   </button>
-                  <button 
+                  <button
                     onClick={() => switchLocale('es')}
                     className={`w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition-colors ${currentLocale === 'es' ? 'text-[#00FF88] font-bold' : 'text-gray-400'}`}
                   >
