@@ -134,7 +134,7 @@ export default function Navbar() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = 'http://localhost:3001/api/v1/auth/google'}
+              onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
               className="flex items-center gap-2 bg-[#00FF88] text-black px-4 py-2 md:px-6 md:py-2.5 rounded-full font-black text-xs md:text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all relative overflow-hidden group/btn"
             >
               <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 skew-x-12" />
