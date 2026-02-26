@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
@@ -45,6 +45,25 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [userCountry, setUserCountry] = useState<string | null>(null);
+
+  const isArgentina = userCountry === 'AR';
+
+  // Detect user country for payment method filtering
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        setUserCountry(data.country_code || null);
+        // Auto-select the best payment method for the region
+        if (data.country_code === 'AR') {
+          setMethod('MERCADOPAGO');
+        } else {
+          setMethod('STRIPE');
+        }
+      })
+      .catch(() => setUserCountry(null)); // Fallback: show all methods
+  }, []);
 
   const coins = searchParams.get('coins') || '0';
   const price = searchParams.get('price') || '0';
@@ -67,12 +86,80 @@ function CheckoutContent() {
     if (!email) return;
     setLoading(true);
 
-    // Simulate backend call (since backend is ignored for now)
-    setTimeout(() => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const token = localStorage.getItem('auth_token') || '';
+      const authHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      // Step 1: Create the order
+      const orderRes = await fetch(`${backendUrl}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify({
+          user_email: email,
+          coin_amount: parseInt(coins),
+          paymentMethod: method,
+        }),
+      });
+
+      if (!orderRes.ok) {
+        const errorData = await orderRes.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create order');
+      }
+
+      const orderData = await orderRes.json();
+      const orderId = orderData.order.id;
+
+      // Step 2: Handle payment based on method
+      if (method === 'MERCADOPAGO') {
+        // Create MercadoPago preference and redirect
+        const mpRes = await fetch(`${backendUrl}/payments/mercadopago`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            orderId,
+            title: `FC 26 Coins - ${parseInt(coins).toLocaleString()} coins`,
+            quantity: 1,
+            unitPrice: parseFloat(price),
+            buyerEmail: email,
+          }),
+        });
+
+        if (!mpRes.ok) throw new Error('Failed to create MercadoPago preference');
+
+        const mpData = await mpRes.json();
+        // Redirect to MercadoPago checkout (sandbox for testing)
+        window.location.href = mpData.sandboxInitPoint || mpData.initPoint;
+        return;
+      }
+
+      if (method === 'TRANSFER' && file) {
+        // Upload receipt
+        const formData = new FormData();
+        formData.append('file', file);
+
+        await fetch(`${backendUrl}/payments/transfer/${orderId}/proof`, {
+          method: 'POST',
+          headers: authHeaders,
+          body: formData,
+        });
+      }
+
+      // For STRIPE (placeholder) and TRANSFER (after upload), show success
       setIsSuccess(true);
-      setLoading(false);
       setTimeout(() => router.push(`/${locale}`), 3000);
-    }, 2000);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Hubo un error al procesar tu orden. ' + (error instanceof Error ? error.message : ''));
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -114,7 +201,7 @@ function CheckoutContent() {
               <div className="w-8 h-8 rounded-lg bg-[#00FF88]/10 flex items-center justify-center text-[#00FF88] font-bold text-sm">1</div>
               <h2 className="text-xl font-bold text-white uppercase tracking-tight">{t('contactInfo')}</h2>
             </div>
-            <div className="bg-[#161616] border border-white/5 rounded-[0.75rem] p-6">
+            <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-6">
               <input
                 type="email"
                 placeholder={t('enterEmail')}
@@ -136,28 +223,37 @@ function CheckoutContent() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <PaymentOption
-                active={method === 'STRIPE'}
-                onClick={() => setMethod('STRIPE')}
-                icon={<StripeIcon />}
-                title={t('creditCard')}
-                subtitle="Powered by Stripe"
-              />
-              <PaymentOption
-                active={method === 'MERCADOPAGO'}
-                onClick={() => setMethod('MERCADOPAGO')}
-                icon={<MercadoPagoIcon />}
-                title={t('mercadoPago')}
-                subtitle="Local Payments (ARS)"
-              />
-              <PaymentOption
-                active={method === 'TRANSFER'}
-                onClick={() => setMethod('TRANSFER')}
-                icon={<Building2 className="w-6 h-6" />}
-                title={t('bankTransfer')}
-                subtitle="Manual Approval (Instant)"
-                highlight
-              />
+              {/* Stripe: visible for non-AR countries */}
+              {!isArgentina && (
+                <PaymentOption
+                  active={method === 'STRIPE'}
+                  onClick={() => setMethod('STRIPE')}
+                  icon={<StripeIcon />}
+                  title={t('creditCard')}
+                  subtitle="Powered by Stripe"
+                />
+              )}
+              {/* MercadoPago: visible for Argentina */}
+              {(isArgentina || userCountry === null) && (
+                <PaymentOption
+                  active={method === 'MERCADOPAGO'}
+                  onClick={() => setMethod('MERCADOPAGO')}
+                  icon={<MercadoPagoIcon />}
+                  title={t('mercadoPago')}
+                  subtitle="Pagos Locales (ARS)"
+                />
+              )}
+              {/* Bank Transfer: visible for Argentina */}
+              {(isArgentina || userCountry === null) && (
+                <PaymentOption
+                  active={method === 'TRANSFER'}
+                  onClick={() => setMethod('TRANSFER')}
+                  icon={<Building2 className="w-6 h-6" />}
+                  title={t('bankTransfer')}
+                  subtitle="Aprobación Manual (Instantáneo)"
+                  highlight
+                />
+              )}
 
               <AnimatePresence>
                 {method === 'TRANSFER' && (
@@ -167,7 +263,7 @@ function CheckoutContent() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-[#161616] border border-white/5 rounded-[0.75rem] p-8 mt-4 space-y-8">
+                    <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-8 mt-4 space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('bankDetails')}</h3>
@@ -198,8 +294,8 @@ function CheckoutContent() {
                               <div
                                 {...getRootProps()}
                                 className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-xl cursor-pointer transition-all group relative overflow-hidden ${isDragActive
-                                    ? 'border-[#00FF88] bg-[#00FF88]/10'
-                                    : 'border-white/10 hover:border-[#00FF88] hover:bg-[#00FF88]/5'
+                                  ? 'border-[#00FF88] bg-[#00FF88]/10'
+                                  : 'border-white/10 hover:border-[#00FF88] hover:bg-[#00FF88]/5'
                                   }`}
                               >
                                 <input {...getInputProps()} />
@@ -224,7 +320,7 @@ function CheckoutContent() {
 
         {/* Right: Summary */}
         <div className="lg:col-span-4">
-          <div className="bg-[#111111] border border-white/5 rounded-[0.75rem] p-8 sticky top-32 space-y-8">
+          <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-8 sticky top-32 space-y-8">
             <h2 className="text-xl font-black text-white italic uppercase tracking-tighter">{t('orderSummary')}</h2>
 
             <div className="space-y-4">
@@ -268,8 +364,8 @@ function CheckoutContent() {
               onClick={handlePayNow}
               disabled={loading || !email}
               className={`w-full py-5 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${loading || !email
-                  ? 'bg-white/5 text-gray-600 cursor-not-allowed'
-                  : 'bg-[#00FF88] text-black shadow-[0_0_30px_rgba(0,255,136,0.3)]'
+                ? 'bg-white/5 text-gray-600 cursor-not-allowed'
+                : 'bg-[#00FF88] text-black shadow-[0_0_30px_rgba(0,255,136,0.3)]'
                 }`}
             >
               {loading ? (
@@ -310,8 +406,8 @@ function PaymentOption({
     <button
       onClick={onClick}
       className={`flex items-center gap-6 p-6 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${active
-          ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]'
-          : 'bg-[#161616] border-white/5 hover:border-white/10'
+        ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]'
+        : 'bg-[#161616] border-white/10 hover:border-white/20'
         }`}
     >
       {highlight && !active && (

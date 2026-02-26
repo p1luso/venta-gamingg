@@ -10,6 +10,7 @@ import { OrdersModule } from './orders/orders.module';
 import { TransferModule } from './transfer/transfer.module';
 import { AuthModule } from './auth/auth.module';
 import { PaymentModule } from './payment/payment.module';
+import { TrustpilotModule } from './trustpilot/trustpilot.module';
 
 @Module({
   imports: [
@@ -26,8 +27,9 @@ import { PaymentModule } from './payment/payment.module';
     OrdersModule,
     TransferModule,
     PaymentModule,
+    TrustpilotModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

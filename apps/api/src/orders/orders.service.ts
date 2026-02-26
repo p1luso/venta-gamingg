@@ -10,11 +10,11 @@ export class OrdersService {
   // In production this should come from a config or DB
   private readonly PRICE_PER_10K_COINS = 0.50;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createOrderDto: CreateOrderDto) {
     const { coin_amount, paymentMethod, user_email } = createOrderDto;
-    
+
     // Find or create user
     let user = await this.prisma.user.findUnique({ where: { email: user_email } });
     if (!user) {
@@ -23,7 +23,7 @@ export class OrdersService {
       });
     }
     const userId = user.id;
-    
+
     // Zero-Trust: Calculate price on backend
     const price_paid = this.calculatePrice(coin_amount);
 
@@ -39,6 +39,10 @@ export class OrdersService {
         transfer_status: TransferStatus.WAITING_CREDS,
       },
     });
+
+    // Simulando Notificación WA al dueño
+    const receiptUrl = 'receipt' in createOrderDto ? createOrderDto['receipt'] : 'N/A';
+    this.logger.log(`[WA_ALERT] Nueva Orden #${order.id} - Comprobante: ${receiptUrl}`);
 
     return {
       message: 'Order created successfully',

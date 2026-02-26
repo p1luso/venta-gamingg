@@ -9,12 +9,16 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaymentService } from './payment.service';
+import { MercadoPagoService } from './mercadopago.service';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly mpService: MercadoPagoService,
+  ) { }
 
   @Post('transfer/:orderId/proof')
   @UseInterceptors(
@@ -41,5 +45,12 @@ export class PaymentController {
   @Patch('approve/:orderId')
   async approveOrder(@Param('orderId') orderId: string) {
     return this.paymentService.approveOrder(orderId);
+  }
+
+  @Post('mercadopago')
+  async createMPPreference(
+    @Body() body: { orderId: string; title: string; quantity: number; unitPrice: number; buyerEmail: string },
+  ) {
+    return this.mpService.createPreference(body);
   }
 }

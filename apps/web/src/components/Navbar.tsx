@@ -19,10 +19,29 @@ export default function Navbar() {
   const currentLocale = pathname.split('/')[1] || 'es';
 
   React.useEffect(() => {
-    // Check for user in localStorage or Cookie (Mock implementation)
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Check for user token in URL after Google Auth redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      // Clean up URL without refreshing the page
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Decode JWT payload to simulate user persistence (mock)
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userData = { name: payload.name || payload.email || 'User' };
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      } catch (e) {
+        console.error('Error decoding token', e);
+      }
+    } else {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     }
   }, []);
 

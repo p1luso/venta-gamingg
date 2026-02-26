@@ -1,14 +1,54 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Calculator from '@/components/Calculator';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Zap, Headset, Trophy } from 'lucide-react';
+import { ShieldCheck, Zap, Headset, Trophy, Star, ExternalLink, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+interface TrustpilotReview {
+  name: string;
+  country: string;
+  text: string;
+  rating: number;
+}
 
 export default function Home() {
   const t = useTranslations('Home');
+  const [trustpilotReviews, setTrustpilotReviews] = useState<TrustpilotReview[]>([]);
+  const [tpScore, setTpScore] = useState('4.6');
+  const [tpTotal, setTpTotal] = useState(46);
+  const [currentReview, setCurrentReview] = useState(0);
+
+  // Auto-rotate hero mini-reviews
+  useEffect(() => {
+    if (trustpilotReviews.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentReview(prev => (prev + 1) % Math.min(trustpilotReviews.length, 3));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [trustpilotReviews]);
+
+  // Fetch TrustPilot reviews dynamically
+  useEffect(() => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+    fetch(`${backendUrl}/trustpilot`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.reviews?.length) setTrustpilotReviews(data.reviews);
+        if (data.score) setTpScore(data.score);
+        if (data.totalReviews) setTpTotal(data.totalReviews);
+      })
+      .catch(() => {
+        // Fallback si el backend no responde
+        setTrustpilotReviews([
+          { name: 'Santiago Russo', country: 'AR', text: 'Excelente atención, compre monedas y con su método automatizado me llegó 1 millón de monedas en 20/25mins.', rating: 5 },
+          { name: 'Gaspi Canton', country: 'AR', text: 'Unos genios, contestan siempre al toque y el servicio es super rapido, confiable al 100%!', rating: 5 },
+          { name: 'Leonardo Fasciglione', country: 'AR', text: 'La mejor página sin dudas, las monedas al mejor precio del mercado y seguro.', rating: 5 },
+        ]);
+      });
+  }, []);
 
   const features = [
     { icon: ShieldCheck, title: t('features.safeTitle'), desc: t('features.safeDesc') },
@@ -71,17 +111,90 @@ export default function Home() {
                 {t('description')}
               </p>
 
-              <div className="flex flex-wrap gap-4">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0A0A0A] bg-gray-800" />
-                  ))}
-                </div>
-                <div className="text-sm font-bold">
-                  <div className="text-white">{t('happyCustomers')}</div>
-                  <div className="text-[#00FF88]">{t('rating')}</div>
-                  <div className="text-gray-400 text-xs mt-1 uppercase tracking-wider">{t('yearsExperience')}</div>
-                </div>
+              <div className="space-y-4">
+                {/* Unified TrustPilot + Stats badge */}
+                <a
+                  href="https://es.trustpilot.com/review/ventagamingg.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-4 px-5 py-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-[#00FF88]/30 transition-all group"
+                >
+                  {/* TrustPilot */}
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <svg viewBox="0 0 126 31" className="h-4 w-auto" fill="none">
+                        <path d="M24.8 0H1.5C.7 0 0 .7 0 1.5v27c0 .8.7 1.5 1.5 1.5h23.3c.8 0 1.5-.7 1.5-1.5v-27C26.3.7 25.6 0 24.8 0z" fill="#00B67A" />
+                        <path d="M13.1 10.3l1.7 5.3h5.5l-4.5 3.2 1.7 5.3-4.4-3.3-4.5 3.3 1.7-5.3-4.4-3.2h5.5l1.7-5.3z" fill="#fff" />
+                        <path d="M18.3 19.6l-.4-1.2-4.8 3.5 5.2-2.3z" fill="#005128" />
+                        <text x="32" y="22" fill="white" fontSize="18" fontWeight="800" fontFamily="system-ui">Trustpilot</text>
+                      </svg>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="flex">
+                        {[1, 2, 3, 4].map(i => (
+                          <Star key={i} className="w-3 h-3 text-[#00B67A] fill-[#00B67A]" />
+                        ))}
+                        <Star className="w-3 h-3 text-[#00B67A] fill-[#00B67A]/60" />
+                      </div>
+                      <span className="text-[11px] text-gray-400 font-medium">{tpScore}/5 · {tpTotal} opiniones</span>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-px h-8 bg-white/10" />
+
+                  {/* Stats */}
+                  <div className="text-xs font-bold">
+                    <div className="text-white">{t('happyCustomers')}</div>
+                    <div className="text-gray-500 text-[10px] mt-0.5 uppercase tracking-wider">{t('yearsExperience')}</div>
+                  </div>
+
+                  <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#00FF88] transition-colors ml-1" />
+                </a>
+
+                {/* Mini carousel of reviews */}
+                {trustpilotReviews.length > 0 && (
+                  <div className="relative max-w-lg">
+                    <div className="overflow-hidden rounded-xl bg-white/[0.03] border border-white/5 px-4 py-3">
+                      <motion.div
+                        key={currentReview}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-start gap-3"
+                      >
+                        <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-[#00B67A] to-emerald-800 flex items-center justify-center text-[9px] font-bold text-white mt-0.5">
+                          {trustpilotReviews[currentReview]?.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-semibold text-white">{trustpilotReviews[currentReview]?.name}</span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map(i => (
+                                <Star key={i} className="w-2.5 h-2.5 text-[#00B67A] fill-[#00B67A]" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
+                            &ldquo;{trustpilotReviews[currentReview]?.text}&rdquo;
+                          </p>
+                        </div>
+                      </motion.div>
+                    </div>
+                    {/* Dots */}
+                    <div className="flex justify-center gap-1.5 mt-2">
+                      {trustpilotReviews.slice(0, 3).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentReview(i)}
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentReview ? 'bg-[#00B67A] w-4' : 'bg-white/20'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
 

@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto) {
     const { email, password, username } = registerDto;
@@ -52,7 +52,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    
+
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -62,13 +62,13 @@ export class AuthService {
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    
+
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = { sub: user.id, email: user.email };
-    
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -91,5 +91,9 @@ export class AuthService {
       });
     }
     return user;
+  }
+
+  generateToken(payload: { sub: string; email: string; name?: string }) {
+    return this.jwtService.sign(payload);
   }
 }

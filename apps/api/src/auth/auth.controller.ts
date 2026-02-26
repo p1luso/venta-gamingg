@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -6,7 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   create(@Body() registerDto: RegisterDto) {
@@ -27,11 +27,13 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
-    // Handles the Google OAuth2 callback
-    return {
-      message: 'User information from Google',
-      user: req.user,
-    };
+  async googleAuthRedirect(@Req() req, @Res() res) {
+    // Generate JWT from the Google user
+    const user = req.user;
+    const payload = { sub: user.id, email: user.email, name: user.username || user.email };
+    const token = this.authService.generateToken(payload);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}?token=${token}`);
   }
 }

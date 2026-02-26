@@ -8,7 +8,7 @@ import * as fs from 'fs';
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async processTransferProof(orderId: string, filePath: string) {
     const order = await this.prisma.order.findUnique({
@@ -22,7 +22,7 @@ export class PaymentService {
     await this.prisma.order.update({
       where: { id: orderId },
       data: {
-        proofImageUrl: filePath,
+        proof_image_url: filePath,
         status: OrderStatus.PENDING_APPROVAL,
       },
     });
@@ -59,25 +59,25 @@ export class PaymentService {
   @Cron('0 0 */15 * *')
   async cleanupProofImages() {
     this.logger.log('Starting cleanup of old proof images...');
-    
+
     const finishedOrders = await this.prisma.order.findMany({
       where: {
         status: OrderStatus.PAID,
-        proofImageUrl: { not: null },
+        proof_image_url: { not: null },
       },
     });
 
     for (const order of finishedOrders) {
-      if (order.proofImageUrl && fs.existsSync(order.proofImageUrl)) {
+      if (order.proof_image_url && fs.existsSync(order.proof_image_url)) {
         try {
-          fs.unlinkSync(order.proofImageUrl);
+          fs.unlinkSync(order.proof_image_url);
           await this.prisma.order.update({
             where: { id: order.id },
-            data: { proofImageUrl: null },
+            data: { proof_image_url: null },
           });
           this.logger.log(`Deleted proof image for order ${order.id}`);
         } catch (error) {
-          this.logger.error(`Failed to delete file ${order.proofImageUrl}: ${error.message}`);
+          this.logger.error(`Failed to delete file ${order.proof_image_url}: ${error.message}`);
         }
       }
     }
