@@ -1,7 +1,11 @@
 {
   "Navbar": {
     "searchPlaceholder": "Buscar juegos, monedas, cuentas...",
-    "login": "Ingresar"
+    "login": "Ingresar",
+    "catalog": "Catálogo",
+    "fcCoins": "FC Coins",
+    "fcPlayers": "FC Players",
+    "boosting": "Boosting"
   },
   "Home": {
     "liveMarketPrices": "Precios de Mercado en Vivo",
@@ -33,6 +37,40 @@
       "supportDesc": "Equipo profesional listo para ayudarte",
       "pricesTitle": "Mejores Precios",
       "pricesDesc": "Tasas de mercado competitivas actualizadas diariamente"
+    },
+    "hero": {
+      "marketLeader": "Market Leader since 2018",
+      "title": "THE ELITE <span class=\"text-[#00FF88] block md:inline mt-2 md:mt-0\">PLATFORM</span>",
+      "description": "Elevamos tu experiencia en <span class=\"text-white\">FC 26</span>. Monedas seguras, boosting profesional y cuentas exclusivas con el soporte de los mejores del mundo.",
+      "buyCoins": "Buy Coins Now",
+      "excellent": "Excelente 4.8/5"
+    },
+    "categories": {
+      "coins": "FC Coins",
+      "coinsDesc": "Entrega en <15 min con sistema automatizado 100% seguro.",
+      "players": "FC Players",
+      "playersDesc": "Conseguí cualquier jugador del mercado directamente en tu cuenta.",
+      "boosting": "Boosting",
+      "boostingDesc": "Subimos tu rango en Champions y Rivals con jugadores Pro.",
+      "explore": "Explore Service"
+    },
+    "proChoice": {
+      "title": "THE PRO CHOICE",
+      "subtitle": "Los que dominan el juego eligen Venta Gaming.",
+      "videoModalTitle": "La Confianza de los que Saben"
+    },
+    "howItWorksNew": {
+      "title": "¿CÓMO FUNCIONA?",
+      "subtitle": "Simple, rápido y sin complicaciones.",
+      "step1": "Step 01",
+      "step1Title": "Elegí tu producto",
+      "step1Desc": "Ingresá la cantidad de monedas o el servicio que necesitás.",
+      "step2": "Step 02",
+      "step2Title": "Pagá forma segura",
+      "step2Desc": "Contamos con procesadores de pago confiables a nivel mundial.",
+      "step3": "Step 03",
+      "step3Title": "Recibí tu pedido",
+      "step3Desc": "Nuestro equipo se encarga del resto en cuestión de minutos."
     }
   },
   "Calculator": {
@@ -75,5 +113,76 @@
     "terms": "Al hacer clic en \"Pagar Ahora\", aceptas nuestros Términos de Servicio.",
     "orderReceived": "¡Pedido Recibido!",
     "thankYou": "Gracias por tu compra. Estamos procesando tus monedas ahora. Recibirás un correo en breve."
+  },
+  "FCCoins": {
+    "title": "COMPRA MONEDAS <span class=\"text-[#00FF88]\">FC 26</span>",
+    "description": "El sistema más rápido y seguro del mercado. Selecciona tu consola, elige la cantidad y recibe tus monedas al instante.",
+    "instantDelivery": "Entrega Instantánea",
+    "instantDeliveryDesc": "Recibí tus monedas en menos de 15 minutos de forma automatizada.",
+    "secureTransactions": "Transacciones Seguras",
+    "secureTransactionsDesc": "Métodos probados para garantizar la integridad de tu cuenta.",
+    "support": "Soporte 24/7",
+    "supportDesc": "Asistencia en tiempo real por cualquier duda o consulta.",
+    "marketPrices": "Precios de Mercado"
+  },
+  "FCPlayers": {
+    "title": "FC 26 <span class=\"text-[#00FF88]\">PLAYERS</span>",
+    "description": "¿No tenés tiempo para tradear? Comprá directamente al jugador que buscás. Plataforma 100% segura.",
+    "searchPlaceholder": "Buscar por nombre, posición o media...",
+    "buyNow": "COMPRAR AHORA",
+    "featuredPlayers": "JUGADORES DESTACADOS",
+    "marketPrice": "Precio de Mercado:",
+    "notFoundTitle": "¿No ves al jugador que buscás?",
+    "notFoundDesc": "Contamos con stock de todos los jugadores transferibles. Hablanos por WhatsApp y te lo cotizamos al instante.",
+    "consultNow": "Consultar ahora"
+  },
+  "Boosting": {
+    "title": "<span class=\"text-[#00FF88]\">BOOSTING</span> PROFESIONAL",
+    "description": "Llevá tu cuenta al siguiente nivel. Jugadores Top 100 y Elite jugarán por vos para asegurarte las mejores recompensas.",
+    "whyChooseUs": "Por qué elegir nuestro servicio",
+    "vpnSecurity": "VPN Security",
+    "vpnSecurityDesc": "Todo el progreso se realiza utilizando VPNs de tu zona para máxima seguridad y cero riesgo de ban.",
+    "proPlayers": "Top Pro Players",
+    "proPlayersDesc": "Solo los mejores jugadores del mundo (Verificados +20-0) se encargarán de tu cuenta.",
+    "liveTracking": "Live Tracking",
+    "liveTrackingDesc": "Seguimiento en directo. Sabrás en qué partido van o si ya completaron tu pedido.",
+    "availableServices": "Nuestros Servicios de Boosting",
+    "mostPopular": "MÁS POPULAR",
+    "futChampions": "FUT Champions Finals",
+    "futChampionsDesc": "Asegurá tu rango deseado en las finales de Champions.",
+    "selectTarget": "Seleccionar Objetivo",
+    "from": "Desde",
+    "divisionRivals": "Division Rivals",
+    "divisionRivalsDesc": "Subimos tu cuenta a la División Élite o conseguimos las victorias semanales.",
+    "playoffs": "FUT Champions Playoffs",
+    "playoffsDesc": "Conseguimos tu clasificación a las finales garantizada.",
+    "eliteService": "Servicio Elite",
+    "viewPlans": "Ver Planes",
+    "successCases": "Casos de éxito",
+    "finalsBoost": "Finals Boost",
+    "rankGuaranteed": "Rango 1-3 Garantizado",
+    "playerQuality": "Calidad del Jugador",
+    "proElite": "Pro Elite",
+    "startingFrom": "Desde",
+    "doubtsTitle": "¿Dudas sobre el proceso?",
+    "talkToSpecialist": "Hablar con un especialista"
+  },
+  "AIAssistant": {
+    "title": "Asistente IA",
+    "online": "En línea",
+    "greeting": "¡Hola! Soy el asistente IA de Venta Gaming. ¿En qué te puedo ayudar hoy? ¿Buscás monedas, una cuenta o boosting?",
+    "placeholder": "Escribí un mensaje...",
+    "poweredBy": "Powered by Gemini AI"
+  },
+  "Footer": {
+    "description": "Líderes en el mercado de FIFA/FC desde 2018. Seguridad, rapidez y soporte premium garantizado.",
+    "legal": "LEGAL",
+    "support": "SOPORTE",
+    "terms": "Términos de Servicio",
+    "privacy": "Políticas de Privacidad",
+    "refund": "Políticas de Reembolso",
+    "secureSite": "Sitio Seguro con Certificación SSL",
+    "rights": "© 2026 Venta Gaming. Todos los derechos reservados.",
+    "reviewsText": "Calificación 4.8/5 basada en 500 reseñas"
   }
 }
