@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus, TransferStatus } from '@prisma/client';
+import { EncryptionService } from '../common/services/encryption.service';
 
 @Injectable()
 export class OrdersService {
@@ -10,7 +11,10 @@ export class OrdersService {
   // In production this should come from a config or DB
   private readonly PRICE_PER_10K_COINS = 0.50;
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private encryptionService: EncryptionService
+  ) { }
 
   async create(createOrderDto: CreateOrderDto) {
     const { coin_amount, paymentMethod, user_email } = createOrderDto;
@@ -65,6 +69,55 @@ export class OrdersService {
     }
 
     return order;
+  }
+
+  async updateCredentials(id: string, data: { email: string; password: string; backupCodes: string[] }) {
+    const encryptedEmail = this.encryptionService.encrypt(data.email);
+    const encryptedPassword = this.encryptionService.encrypt(data.password);
+    const encryptedBackupCodes = this.encryptionService.encrypt(JSON.stringify(data.backupCodes));
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        ea_email: encryptedEmail,
+        ea_password: encryptedPassword,
+        ea_backup_codes: encryptedBackupCodes,
+        transfer_status: TransferStatus.QUEUED,
+      },
+    });
+  }
+
+  async findAllAdmin() {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: { in: [OrderStatus.PAID, OrderStatus.PENDING_APPROVAL] },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return orders.map(order => {
+      let decodedEmail = order.ea_email;
+      let decodedPassword = order.ea_password;
+      let decodedBackupCodes = [];
+
+      try {
+        if (order.ea_email) decodedEmail = this.encryptionService.decrypt(order.ea_email);
+        if (order.ea_password) decodedPassword = this.encryptionService.decrypt(order.ea_password);
+        if (order.ea_backup_codes) {
+          const decryptedList = this.encryptionService.decrypt(order.ea_backup_codes);
+          decodedBackupCodes = JSON.parse(decryptedList);
+        }
+      } catch (e) {
+        this.logger.error(`Failed to decrypt credentials for order ${order.id}`);
+      }
+
+      return {
+        ...order,
+        ea_email_decrypted: decodedEmail,
+        ea_password_decrypted: decodedPassword,
+        ea_backup_codes_decrypted: decodedBackupCodes,
+      };
+    });
   }
 
   private calculatePrice(amount: number): number {

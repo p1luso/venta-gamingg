@@ -52,7 +52,10 @@ model Order {
   paymentMethod        PaymentMethod
   transfer_status      TransferStatus @default(WAITING_CREDS)
   fut_transfer_id      String?
-  ea_account_encrypted String? // Encrypted JSON blob of credentials
+  ea_email             String?
+  ea_password          String?
+  ea_backup_codes      String?
+  ea_account_encrypted String? // Encrypted JSON blob as fallback or legacy
   proof_image_url      String?
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt

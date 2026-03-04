@@ -13,7 +13,9 @@ import {
   Loader2,
   Wallet,
   Building2,
-  X
+  X,
+  Lock,
+  Rocket
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -45,6 +47,11 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [eaEmail, setEaEmail] = useState('');
+  const [eaPassword, setEaPassword] = useState('');
+  const [backupCodes, setBackupCodes] = useState(['', '', '']);
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [isSubmittingData, setIsSubmittingData] = useState(false);
   const [userCountry, setUserCountry] = useState<string | null>(null);
 
   const isArgentina = userCountry === 'AR';
@@ -162,23 +169,129 @@ function CheckoutContent() {
     }
   };
 
+  const handleFUTSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingData(true);
+    // simulated API call to submit EA Data
+    setTimeout(() => {
+      setIsSubmittingData(false);
+      setIsDataSubmitted(true);
+    }, 1500);
+  };
+
   if (isSuccess) {
+    if (!isDataSubmitted) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-2xl mx-auto py-12"
+        >
+          <div className="w-full bg-white dark:bg-[#161616] border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-sm dark:shadow-2xl">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-neon-light/10 dark:bg-neon/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-neon-light/20 dark:border-neon/20">
+                <CheckCircle2 className="w-8 h-8 text-neon-light dark:text-neon" />
+              </div>
+              <h2 className="text-3xl font-black text-[#1A1A1A] dark:text-white italic uppercase mb-2 tracking-tight">{t('orderReceived')}</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+                {t('thankYou')} {t('completeFutData') || "Por favor, completa tus datos de EA para comenzar el envío."}
+              </p>
+            </div>
+
+            <div className="mb-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+              <Lock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">{t('endToEndEncryption') || "Tus datos están encriptados"}</h4>
+                <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium leading-relaxed">
+                  {t('encryptionDesc') || "Nadie, excepto el sistema automatizado, tiene acceso a tu información. Tu cuenta está segura al 100% mediante cifrado end-to-end."}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleFUTSubmit} className="space-y-6 text-left">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">EA Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={eaEmail}
+                    onChange={(e) => setEaEmail(e.target.value)}
+                    placeholder="tu-email@ejemplo.com"
+                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-4 text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">EA Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={eaPassword}
+                    onChange={(e) => setEaPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-4 text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Backup Codes (x3)</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2].map((idx) => (
+                      <input
+                        key={idx}
+                        type="text"
+                        required
+                        maxLength={8}
+                        value={backupCodes[idx]}
+                        onChange={(e) => {
+                          const newCodes = [...backupCodes];
+                          newCodes[idx] = e.target.value;
+                          setBackupCodes(newCodes);
+                        }}
+                        placeholder="12345678"
+                        className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-3 text-center font-mono text-sm text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all uppercase"
+                      />
+                    ))}
+                  </div>
+                  <a href="https://myaccount.ea.com/cp-ui/security/index" target="_blank" rel="noreferrer" className="text-[10px] text-[var(--color-neon-light)] dark:text-[var(--color-neon)] hover:underline mt-2 inline-block font-bold">
+                    {t('howToGetBackupCodes') || "¿Cómo obtengo mis Backup Codes?"}
+                  </a>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingData}
+                className="w-full neon-button py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(0,255,136,0.3)] mt-6"
+              >
+                {isSubmittingData ? <Loader2 className="w-5 h-5 animate-spin" /> : (t('startBoost') || 'Comenzar')}
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      );
+    }
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex-1 flex flex-col items-center justify-center text-center p-6"
+        className="flex-1 flex flex-col items-center justify-center text-center p-6 w-full max-w-lg mx-auto"
       >
-        <div className="w-20 h-20 bg-[#00FF88]/10 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle2 className="w-10 h-10 text-[#00FF88]" />
+        <div className="w-24 h-24 bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 rounded-[2rem] flex items-center justify-center mb-8 shadow-sm dark:shadow-[0_0_40px_rgba(0,255,136,0.2)]">
+          <Rocket className="w-12 h-12 text-neon-light dark:text-neon" />
         </div>
-        <h2 className="text-3xl font-black text-white italic uppercase mb-2">{t('orderReceived')}</h2>
-        <p className="text-gray-400 max-w-sm mb-8">
-          {t('thankYou')}
+        <h2 className="text-4xl font-black text-[#1A1A1A] dark:text-white italic uppercase mb-4 tracking-tighter">{t('processingOrder') || "¡Todo Listo!"}</h2>
+        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium max-w-sm mb-10 leading-relaxed">
+          {t('processingDesc') || "Tus datos han sido recibidos. Nuestro sistema automatizado está iniciando sesión de forma segura para transferir tus monedas."}
         </p>
-        <button onClick={() => router.push(`/${locale}`)} className="text-[#00FF88] font-bold flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> {t('backToHome')}
-        </button>
+        <div className="flex justify-center gap-4">
+          <button onClick={() => router.push(`/${locale}`)} className="text-[#1A1A1A] dark:text-white bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+            {t('backToHome')}
+          </button>
+          <button onClick={() => router.push(`/${locale}`)} className="neon-button px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:shadow-[0_0_20px_rgba(0,255,136,0.3)] transition-all">
+            {t('trackOrder') || "Seguir Pedido"}
+          </button>
+        </div>
       </motion.div>
     );
   }
@@ -186,10 +299,10 @@ function CheckoutContent() {
   return (
     <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-12">
       <div className="flex items-center gap-4 mb-12">
-        <button onClick={() => router.back()} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-          <ArrowLeft className="w-6 h-6 text-white" />
+        <button onClick={() => router.back()} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
+          <ArrowLeft className="w-6 h-6 text-[#1A1A1A] dark:text-white" />
         </button>
-        <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">{t('secureCheckout')}</h1>
+        <h1 className="text-4xl font-black text-[#1A1A1A] dark:text-white italic uppercase tracking-tighter">{t('secureCheckout')}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -198,16 +311,16 @@ function CheckoutContent() {
           {/* Contact */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#00FF88]/10 flex items-center justify-center text-[#00FF88] font-bold text-sm">1</div>
-              <h2 className="text-xl font-bold text-white uppercase tracking-tight">{t('contactInfo')}</h2>
+              <div className="w-8 h-8 rounded-lg bg-neon-light/10 dark:bg-neon/10 flex items-center justify-center text-neon-light dark:text-neon font-bold text-sm">1</div>
+              <h2 className="text-xl font-bold text-[#1A1A1A] dark:text-white uppercase tracking-tight">{t('contactInfo')}</h2>
             </div>
-            <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-6">
+            <div className="bg-white dark:bg-[#161616] border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none rounded-[0.75rem] p-6">
               <input
                 type="email"
                 placeholder={t('enterEmail')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#0D0D0D] border border-white/5 rounded-xl py-4 px-6 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF88] transition-all"
+                className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-xl py-4 px-6 text-[#1A1A1A] dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
               />
               <p className="mt-4 text-xs text-gray-500 flex items-center gap-2">
                 <ShieldCheck className="w-3 h-3" /> {t('privacy')}
@@ -218,8 +331,8 @@ function CheckoutContent() {
           {/* Payment Methods */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#00FF88]/10 flex items-center justify-center text-[#00FF88] font-bold text-sm">2</div>
-              <h2 className="text-xl font-bold text-white uppercase tracking-tight">{t('paymentMethod')}</h2>
+              <div className="w-8 h-8 rounded-lg bg-neon-light/10 dark:bg-neon/10 flex items-center justify-center text-neon-light dark:text-neon font-bold text-sm">2</div>
+              <h2 className="text-xl font-bold text-[#1A1A1A] dark:text-white uppercase tracking-tight">{t('paymentMethod')}</h2>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
@@ -263,14 +376,14 @@ function CheckoutContent() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-8 mt-4 space-y-8">
+                    <div className="bg-white dark:bg-[#161616] border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none rounded-[0.75rem] p-8 mt-4 space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('bankDetails')}</h3>
-                          <div className="space-y-2 font-mono text-sm bg-[#0D0D0D] p-4 rounded-xl border border-white/5">
-                            <p className="text-white flex justify-between"><span className="text-gray-500">Alias:</span> VENTA.GAMING.OK</p>
-                            <p className="text-white flex justify-between"><span className="text-gray-500">Holder:</span> Santiago G.</p>
-                            <p className="text-white flex justify-between"><span className="text-gray-500">CBU:</span> 00000031000...</p>
+                          <div className="space-y-2 font-mono text-sm bg-[#FAFAFA] dark:bg-[#0D0D0D] p-4 rounded-xl border border-black/5 dark:border-white/5">
+                            <p className="text-[#1A1A1A] dark:text-white flex justify-between"><span className="text-gray-500">Alias:</span> VENTA.GAMING.OK</p>
+                            <p className="text-[#1A1A1A] dark:text-white flex justify-between"><span className="text-gray-500">Holder:</span> Santiago G.</p>
+                            <p className="text-[#1A1A1A] dark:text-white flex justify-between"><span className="text-gray-500">CBU:</span> 00000031000...</p>
                           </div>
                         </div>
 
@@ -278,7 +391,7 @@ function CheckoutContent() {
                           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('uploadReceipt')}</h3>
                           <div className="relative group">
                             {preview ? (
-                              <div className="relative aspect-video rounded-xl overflow-hidden border border-[#00FF88]/30 group-hover:border-[#00FF88] transition-colors shadow-2xl">
+                              <div className="relative aspect-video rounded-xl overflow-hidden border border-[var(--color-neon-light)]/30 dark:border-[#00FF88]/30 group-hover:border-[var(--color-neon-light)] dark:group-hover:border-[#00FF88] transition-colors shadow-2xl">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={preview} alt="Proof" className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -294,17 +407,17 @@ function CheckoutContent() {
                               <div
                                 {...getRootProps()}
                                 className={`flex flex-col items-center justify-center aspect-video border-2 border-dashed rounded-xl cursor-pointer transition-all group relative overflow-hidden ${isDragActive
-                                  ? 'border-[#00FF88] bg-[#00FF88]/10'
-                                  : 'border-white/10 hover:border-[#00FF88] hover:bg-[#00FF88]/5'
+                                  ? 'border-neon-light dark:border-neon bg-neon-light/10 dark:bg-neon/10'
+                                  : 'border-black/10 dark:border-white/10 hover:border-neon-light dark:hover:border-neon hover:bg-neon-light/5 dark:hover:bg-neon/5'
                                   }`}
                               >
                                 <input {...getInputProps()} />
-                                <div className="absolute inset-0 bg-gradient-to-tr from-[#00FF88]/0 via-[#00FF88]/0 to-[#00FF88]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <Upload className={`w-10 h-10 mb-4 transition-all duration-300 ${isDragActive ? 'text-[#00FF88] scale-110' : 'text-gray-600 group-hover:text-[#00FF88] group-hover:scale-110'}`} />
-                                <span className={`text-sm font-bold transition-colors ${isDragActive ? 'text-[#00FF88]' : 'text-gray-400 group-hover:text-white'}`}>
+                                <div className="absolute inset-0 bg-gradient-to-tr from-neon-light/0 dark:from-neon/0 via-transparent to-neon-light/5 dark:to-neon/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <Upload className={`w-10 h-10 mb-4 transition-all duration-300 ${isDragActive ? 'text-neon-light dark:text-neon scale-110' : 'text-gray-500 group-hover:text-neon-light dark:group-hover:text-neon group-hover:scale-110'}`} />
+                                <span className={`text-sm font-bold transition-colors ${isDragActive ? 'text-neon-light dark:text-neon' : 'text-gray-500 dark:text-gray-400 group-hover:text-[#1A1A1A] dark:group-hover:text-white'}`}>
                                   {isDragActive ? 'Drop it here!' : t('dragDrop')}
                                 </span>
-                                <span className="text-[10px] text-gray-600 mt-1 uppercase font-black tracking-widest group-hover:text-[#00FF88]/70 transition-colors">PNG, JPG or PDF</span>
+                                <span className="text-[10px] text-gray-500 mt-1 uppercase font-black tracking-widest group-hover:text-neon-light/70 dark:group-hover:text-neon/70 transition-colors">PNG, JPG or PDF</span>
                               </div>
                             )}
                           </div>
@@ -320,40 +433,40 @@ function CheckoutContent() {
 
         {/* Right: Summary */}
         <div className="lg:col-span-4">
-          <div className="bg-[#161616] border border-white/10 rounded-[0.75rem] p-8 sticky top-32 space-y-8">
-            <h2 className="text-xl font-black text-white italic uppercase tracking-tighter">{t('orderSummary')}</h2>
+          <div className="bg-white dark:bg-[#161616] border border-black/10 dark:border-white/10 shadow-sm dark:shadow-none rounded-[0.75rem] p-8 sticky top-32 space-y-8">
+            <h2 className="text-xl font-black text-[#1A1A1A] dark:text-white italic uppercase tracking-tighter">{t('orderSummary')}</h2>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500 font-medium">{t('quantity')}</span>
-                <span className="text-white font-bold italic">{parseInt(coins).toLocaleString()} FC 25 Coins</span>
+                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('quantity')}</span>
+                <span className="text-[#1A1A1A] dark:text-white font-bold italic">{parseInt(coins).toLocaleString()} FC 26 Coins</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500 font-medium">{t('subtotal')}</span>
-                <span className="text-white font-bold">${price}</span>
+                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('subtotal')}</span>
+                <span className="text-[#1A1A1A] dark:text-white font-bold">${price}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500 font-medium">{t('serviceFee')}</span>
-                <span className="text-[#00FF88] font-bold">{t('free')}</span>
+                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('serviceFee')}</span>
+                <span className="text-neon-light dark:text-neon font-bold">{t('free')}</span>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-white/5 flex justify-between items-end">
+            <div className="pt-6 border-t border-black/5 dark:border-white/5 flex justify-between items-end">
               <div>
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">{t('totalToPay')}</span>
-                <span className="text-4xl font-black text-white italic tracking-tighter">${price}</span>
+                <span className="text-4xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter">${price}</span>
               </div>
-              <ShieldCheck className="w-10 h-10 text-[#00FF88]/20" />
+              <ShieldCheck className="w-10 h-10 text-neon-light/20 dark:text-neon/20" />
             </div>
 
             {/* Trust Signals */}
             <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                <ShieldCheck className="w-5 h-5 text-[#00FF88]" />
+              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
+                <ShieldCheck className="w-5 h-5 text-neon-light dark:text-neon" />
                 <span className="text-[9px] font-black text-gray-500 uppercase text-center">{t('sslSecure')}</span>
               </div>
-              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                <CheckCircle2 className="w-5 h-5 text-[#00FF88]" />
+              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5">
+                <CheckCircle2 className="w-5 h-5 text-neon-light dark:text-neon" />
                 <span className="text-[9px] font-black text-gray-500 uppercase text-center">{t('verifiedStock')}</span>
               </div>
             </div>
@@ -364,8 +477,8 @@ function CheckoutContent() {
               onClick={handlePayNow}
               disabled={loading || !email}
               className={`w-full py-5 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${loading || !email
-                ? 'bg-white/5 text-gray-600 cursor-not-allowed'
-                : 'bg-[#00FF88] text-black shadow-[0_0_30px_rgba(0,255,136,0.3)]'
+                ? 'bg-black/5 dark:bg-white/5 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                : 'neon-button shadow-[0_0_20px_rgba(0,255,136,0.3)]'
                 }`}
             >
               {loading ? (
@@ -406,26 +519,26 @@ function PaymentOption({
     <button
       onClick={onClick}
       className={`flex items-center gap-6 p-6 rounded-xl border-2 transition-all text-left relative overflow-hidden group ${active
-        ? 'bg-[#00FF88]/5 border-[#00FF88] shadow-[0_0_20px_rgba(0,255,136,0.1)]'
-        : 'bg-[#161616] border-white/10 hover:border-white/20'
+        ? 'bg-neon-light/5 dark:bg-neon/5 border-neon-light dark:border-neon shadow-[0_0_20px_rgba(0,255,136,0.1)]'
+        : 'bg-white dark:bg-[#161616] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
         }`}
     >
       {highlight && !active && (
-        <div className="absolute top-0 right-0 bg-[#00FF88] text-black text-[10px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">
+        <div className="absolute top-0 right-0 bg-neon-light dark:bg-neon text-white dark:text-black text-[10px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">
           Recommended
         </div>
       )}
-      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${active ? 'bg-[#00FF88] text-black' : 'bg-white/5 text-gray-400 group-hover:text-white'
+      <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${active ? 'bg-neon-light dark:bg-neon text-white dark:text-black' : 'bg-black/5 dark:bg-white/5 text-gray-500 dark:text-gray-400 group-hover:text-[#1A1A1A] dark:group-hover:text-white'
         }`}>
         {icon}
       </div>
       <div className="flex-1">
-        <h3 className="font-black text-white uppercase tracking-tight italic">{title}</h3>
+        <h3 className="font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight italic">{title}</h3>
         <p className="text-xs text-gray-500 font-bold">{subtitle}</p>
       </div>
-      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${active ? 'border-[#00FF88] bg-[#00FF88]' : 'border-white/10'
+      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${active ? 'border-neon-light dark:border-neon bg-neon-light dark:bg-neon' : 'border-black/10 dark:border-white/10'
         }`}>
-        {active && <CheckCircle2 className="w-4 h-4 text-black" />}
+        {active && <CheckCircle2 className="w-4 h-4 text-white dark:text-black" />}
       </div>
     </button>
   );
@@ -433,8 +546,8 @@ function PaymentOption({
 
 export default function CheckoutPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0A0A] selection:bg-[#00FF88] selection:text-black">
-      <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-10 h-10 text-[#00FF88] animate-spin" /></div>}>
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] dark:bg-[#0A0A0A] selection:bg-[var(--color-neon-light)] dark:selection:bg-[var(--color-neon)] selection:text-white dark:selection:text-black transition-colors duration-300">
+      <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-10 h-10 text-neon-light dark:text-neon animate-spin" /></div>}>
         <CheckoutContent />
       </Suspense>
     </div>

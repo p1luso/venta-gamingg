@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen ? 'bg-[#0A0A0A]/95 border-b border-white/5 backdrop-blur-3xl' : 'bg-transparent'
+    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen ? 'bg-white/95 dark:bg-[#0A0A0A]/95 border-b border-black/5 dark:border-white/5 backdrop-blur-3xl' : 'bg-transparent'
       }`}>
       <div className="max-w-7xl mx-auto h-16 md:h-20 px-3 sm:px-4 md:px-6 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo */}
@@ -79,8 +80,8 @@ export default function Navbar() {
               priority
             />
           </div>
-          <span className="hidden sm:block text-[11px] sm:text-sm md:text-xl font-black tracking-tighter text-white uppercase italic truncate">
-            Venta<span className="text-[#00FF88]">Gamingg</span>
+          <span className="hidden sm:block text-[11px] sm:text-sm md:text-xl font-black tracking-tighter text-black dark:text-white uppercase italic truncate">
+            Venta<span className="text-[var(--color-neon-light)] dark:text-neon">Gamingg</span>
           </span>
         </Link>
 
@@ -91,7 +92,7 @@ export default function Navbar() {
             <button
               onMouseEnter={() => setIsServicesOpen(true)}
               onMouseLeave={() => setIsServicesOpen(false)}
-              className="flex items-center gap-1.5 text-sm font-bold uppercase italic tracking-wider text-gray-400 hover:text-white transition-colors py-2"
+              className="flex items-center gap-1.5 text-sm font-bold uppercase italic tracking-wider text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors py-2"
             >
               <LayoutGrid className="w-4 h-4" />
               {t('catalog')}
@@ -108,14 +109,14 @@ export default function Navbar() {
                   onMouseLeave={() => setIsServicesOpen(false)}
                   className="absolute top-full left-0 w-64 pt-2"
                 >
-                  <div className="bg-[#111111] border border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
+                  <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
                     {navLinks.map((link) => (
                       <Link
                         key={link.name}
                         href={link.href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#00FF88]/10 hover:text-[#00FF88] group transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-[#00FF88]/10 hover:text-[var(--color-neon-light)] dark:hover:text-neon group transition-all text-black dark:text-white"
                       >
-                        <link.icon className="w-5 h-5 text-gray-500 group-hover:text-[#00FF88]" />
+                        <link.icon className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-[var(--color-neon-light)] dark:group-hover:text-neon" />
                         <span className="text-sm font-bold uppercase italic tracking-tight">{link.name}</span>
                       </Link>
                     ))}
@@ -125,16 +126,17 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          <Link href={`/${currentLocale}/fc-coins`} className="text-sm font-bold uppercase italic tracking-wider text-gray-400 hover:text-white transition-colors">{t('fcCoins')}</Link>
-          <Link href={`/${currentLocale}/boosting`} className="text-sm font-bold uppercase italic tracking-wider text-gray-400 hover:text-white transition-colors">{t('boosting')}</Link>
+          <Link href={`/${currentLocale}/fc-coins`} className="text-sm font-bold uppercase italic tracking-wider text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">{t('fcCoins')}</Link>
+          <Link href={`/${currentLocale}/boosting`} className="text-sm font-bold uppercase italic tracking-wider text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">{t('boosting')}</Link>
         </div>
 
         {/* Right Actions - Desktop & Mobile */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6 shrink-0">
+          <ThemeToggle />
           <div className="hidden sm:block relative">
             <button
               onClick={() => setIsLangOpen(!isLangOpen)}
-              className="flex items-center gap-1 hover:text-white transition-colors text-[9px] sm:text-[10px] md:text-sm font-bold uppercase italic text-gray-400"
+              className="flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors text-[9px] sm:text-[10px] md:text-sm font-bold uppercase italic text-gray-500 dark:text-gray-400"
             >
               <Globe className="w-4 h-4" />
               <span>{currentLocale === 'en' ? 'EN' : 'ES'}</span>
@@ -147,10 +149,10 @@ export default function Navbar() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full right-0 mt-2 w-32 bg-[#111111] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50"
+                  className="absolute top-full right-0 mt-2 w-32 bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-xl overflow-hidden shadow-xl z-50 text-black dark:text-white"
                 >
-                  <button onClick={() => switchLocale('en')} className={`w-full text-left px-4 py-3 text-xs font-bold uppercase italic hover:bg-white/5 ${currentLocale === 'en' ? 'text-[#00FF88]' : 'text-gray-400'}`}>English</button>
-                  <button onClick={() => switchLocale('es')} className={`w-full text-left px-4 py-3 text-xs font-bold uppercase italic hover:bg-white/5 ${currentLocale === 'es' ? 'text-[#00FF88]' : 'text-gray-400'}`}>Español</button>
+                  <button onClick={() => switchLocale('en')} className={`w-full text-left px-4 py-3 text-xs font-bold uppercase italic hover:bg-black/5 dark:hover:bg-white/5 ${currentLocale === 'en' ? 'text-[var(--color-neon-light)] dark:text-neon' : 'text-gray-600 dark:text-gray-400'}`}>English</button>
+                  <button onClick={() => switchLocale('es')} className={`w-full text-left px-4 py-3 text-xs font-bold uppercase italic hover:bg-black/5 dark:hover:bg-white/5 ${currentLocale === 'es' ? 'text-[var(--color-neon-light)] dark:text-neon' : 'text-gray-600 dark:text-gray-400'}`}>Español</button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -160,7 +162,7 @@ export default function Navbar() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center gap-1.5 md:gap-2 bg-white/10 text-white w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide hover:bg-white/20 transition-all border border-white/10 shrink-0"
+              className="flex items-center justify-center gap-1.5 md:gap-2 bg-black/5 dark:bg-white/10 text-black dark:text-white w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide hover:bg-black/10 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10 shrink-0"
             >
               <User className="w-4 h-4 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
               <span className="hidden sm:inline">{user.name}</span>
@@ -170,7 +172,7 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
-              className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 bg-[#00FF88] text-black w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide hover:shadow-[0_0_30px_rgba(0,255,136,0.6)] transition-all shrink-0"
+              className="neon-button flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide shrink-0"
             >
               <LogIn className="w-4 h-4 md:w-4 md:h-4" />
               <span className="hidden sm:inline">{t('login')}</span>
@@ -179,7 +181,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="lg:hidden p-1.5 md:p-2 text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors ml-1"
+            className="lg:hidden p-1.5 md:p-2 text-black dark:text-white bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors ml-1"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle Menu"
           >
@@ -196,7 +198,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: '100vh' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-[#0A0A0A] border-b border-white/5 overflow-y-auto backdrop-blur-3xl shadow-2xl z-40 pb-24"
+            className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-[#0A0A0A] border-b border-black/5 dark:border-white/5 overflow-y-auto backdrop-blur-3xl shadow-2xl z-40 pb-24"
           >
             <div className="flex flex-col px-4 py-8 gap-4 max-w-sm mx-auto">
               <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">{t('catalog')}</div>
@@ -205,27 +207,27 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-[#121212] border border-white/5 active:scale-95 transition-all text-white hover:border-[#00FF88]/30 hover:bg-white/5"
+                  className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-black/5 dark:bg-[#121212] border border-black/5 dark:border-white/5 active:scale-95 transition-all text-black dark:text-white hover:border-[var(--color-neon-light)]/30 dark:hover:border-neon/30 hover:bg-black/10 dark:hover:bg-white/5"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#00FF88]/10 flex items-center justify-center border border-[#00FF88]/20 shrink-0">
-                    <link.icon className="w-5 h-5 text-[#00FF88]" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--color-neon-light)]/10 dark:bg-neon/10 flex items-center justify-center border border-[var(--color-neon-light)]/20 dark:border-neon/20 shrink-0">
+                    <link.icon className="w-5 h-5 text-[var(--color-neon-light)] dark:text-neon" />
                   </div>
                   <span className="text-base font-black uppercase italic tracking-tight">{link.name}</span>
                 </Link>
               ))}
 
-              <div className="h-px bg-white/5 my-2" />
+              <div className="h-px bg-black/10 dark:bg-white/5 my-2" />
               <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">Language / Idioma</div>
               <div className="flex gap-3 px-1">
                 <button
                   onClick={() => switchLocale('en')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border font-black italic tracking-wider transition-colors ${currentLocale === 'en' ? 'bg-[#00FF88]/10 text-[#00FF88] border-[#00FF88]/30' : 'bg-[#121212] text-gray-400 border-white/5 hover:bg-white/5'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border font-black italic tracking-wider transition-colors ${currentLocale === 'en' ? 'bg-[var(--color-neon-light)]/10 dark:bg-[#00FF88]/10 text-[var(--color-neon-light)] dark:text-[#00FF88] border-[var(--color-neon-light)]/30 dark:border-[#00FF88]/30' : 'bg-black/5 dark:bg-[#121212] text-gray-500 dark:text-gray-400 border-black/10 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/5'}`}
                 >
                   <Globe className="w-4 h-4" /> EN
                 </button>
                 <button
                   onClick={() => switchLocale('es')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border font-black italic tracking-wider transition-colors ${currentLocale === 'es' ? 'bg-[#00FF88]/10 text-[#00FF88] border-[#00FF88]/30' : 'bg-[#121212] text-gray-400 border-white/5 hover:bg-white/5'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border font-black italic tracking-wider transition-colors ${currentLocale === 'es' ? 'bg-[var(--color-neon-light)]/10 dark:bg-[#00FF88]/10 text-[var(--color-neon-light)] dark:text-[#00FF88] border-[var(--color-neon-light)]/30 dark:border-[#00FF88]/30' : 'bg-black/5 dark:bg-[#121212] text-gray-500 dark:text-gray-400 border-black/10 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/5'}`}
                 >
                   <Globe className="w-4 h-4" /> ES
                 </button>

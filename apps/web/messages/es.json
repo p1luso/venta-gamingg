@@ -184,5 +184,10 @@
     "secureSite": "Sitio Seguro con Certificación SSL",
     "rights": "© 2026 Venta Gaming. Todos los derechos reservados.",
     "reviewsText": "Calificación 4.8/5 basada en 500 reseñas"
+  },
+  "SecurityFeatures": {
+    "secureTransfer": "Transferencia Segura",
+    "deliveryMinutes": "Entrega en minutos",
+    "vipSupport": "Soporte VIP"
   }
 }

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-neon: #00FF88;
+  --color-neon-light: #00CC6A;
+}
 @layer base {
   :root {
     --background: 0 0% 4%;
@@ -26,33 +32,75 @@
 }
 
 body {
+  background-color: #FFFFFF;
+  color: #1A1A1A;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
   background-color: #0A0A0A;
   color: #FFFFFF;
 }
 
+.card-light {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.dark .card-light {
+  background-color: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
 .neon-border {
-  border: 1px solid #00FF88;
+  border: 1px solid var(--color-neon-light);
+  box-shadow: 0 0 15px rgba(0, 204, 106, 0.2);
+}
+
+.dark .neon-border {
+  border: 1px solid var(--color-neon);
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
 }
 
 .neon-text {
-  color: #00FF88;
+  color: var(--color-neon-light);
+  text-shadow: 0 0 10px rgba(0, 204, 106, 0.5);
+}
+
+.dark .neon-text {
+  color: var(--color-neon);
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 .neon-button {
-  background: #00FF88;
-  color: #0A0A0A;
+  background: var(--color-neon-light);
+  color: #FAFAFA;
   transition: all 0.3s ease;
 }
 
+.dark .neon-button {
+  background: var(--color-neon);
+  color: #0A0A0A;
+}
+
 .neon-button:hover {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+  box-shadow: 0 0 20px rgba(0, 204, 106, 0.6);
   transform: translateY(-2px);
 }
 
+.dark .neon-button:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
 .glass-morphism {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-morphism {
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }

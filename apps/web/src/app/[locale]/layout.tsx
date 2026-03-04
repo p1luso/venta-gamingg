@@ -5,6 +5,7 @@ import "../globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AIAssistant from "@/components/AIAssistant";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,20 +33,22 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0A] text-white min-h-screen relative`}>
+    <html lang={locale} suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#FAFAFA] text-[#1A1A1A] dark:bg-[#0A0A0A] dark:text-white min-h-screen relative transition-colors duration-300`}>
         {/* Elite Background Gradients */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none -z-50">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#00FF88]/5 blur-[120px] rounded-full" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-[#00FF88]/5 blur-[100px] rounded-full" />
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[var(--color-neon-light)]/5 dark:bg-[var(--color-neon)]/5 blur-[120px] rounded-full transition-colors" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-[var(--color-neon-light)]/5 dark:bg-[var(--color-neon)]/5 blur-[100px] rounded-full transition-colors" />
         </div>
 
-        <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          {children}
-          <AIAssistant />
-          <Footer />
-        </NextIntlClientProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <NextIntlClientProvider messages={messages}>
+            <Navbar />
+            {children}
+            <AIAssistant />
+            <Footer />
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

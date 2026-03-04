@@ -72,8 +72,12 @@ export class MercadoPagoService {
                         email: data.buyerEmail,
                     },
                     external_reference: data.orderId,
-                    // back_urls and auto_return require publicly accessible URLs
-                    // Enable in production with real domain
+                    back_urls: {
+                        success: `${this.configService.get<string>('FRONTEND_URL')}/order/${data.orderId}/setup`,
+                        failure: `${this.configService.get<string>('FRONTEND_URL')}/checkout?status=failure`,
+                        pending: `${this.configService.get<string>('FRONTEND_URL')}/checkout?status=pending`,
+                    },
+                    auto_return: 'approved',
                 },
             });
 

@@ -184,5 +184,10 @@
     "secureSite": "Secure Site with SSL Certification",
     "rights": "© 2026 Venta Gaming. All rights reserved.",
     "reviewsText": "Rated 4.8/5 based on 500 reviews"
+  },
+  "SecurityFeatures": {
+    "secureTransfer": "Secure Transfer",
+    "deliveryMinutes": "Delivery in minutes",
+    "vipSupport": "VIP Support"
   }
 }
