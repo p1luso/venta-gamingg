@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ArrowRightLeft, Info, TrendingUp, Loader2 } from 'lucide-react';
+import { ShoppingCart, ArrowRightLeft, Info, TrendingUp, Loader2, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 const COIN_PRICE_PER_MILLION_PC = 13.50; // Example lower price for PC
@@ -20,6 +20,8 @@ export default function Calculator() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [type, setType] = useState<'buy' | 'sell'>('buy');
   const [isLoading, setIsLoading] = useState(false);
+  const [isArgentina, setIsArgentina] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
   const MAX_COINS = 4000000;
   const MIN_COINS = 100000;
@@ -29,6 +31,28 @@ export default function Calculator() {
     const pricePerMillion = platform === 'pc' ? COIN_PRICE_PER_MILLION_PC : COIN_PRICE_PER_MILLION_CONSOLE;
     setTotalPrice((coins / 1000000) * pricePerMillion);
   }, [coins, platform, type]);
+
+  useEffect(() => {
+    // Detect country
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.country_code === 'AR') {
+          setIsArgentina(true);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch exchange rate
+    fetch('https://dolarapi.com/v1/dolares/blue')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.venta) {
+          setExchangeRate(data.venta);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const getDeliveryTime = () => {
     if (coins < 500000) return '15-30 MINS';
@@ -57,7 +81,7 @@ export default function Calculator() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-md bg-white dark:bg-[#161616] rounded-[0.75rem] border border-black/10 dark:border-white/10 p-5 md:p-8 shadow-2xl relative overflow-hidden group/card"
+          className="w-full max-w-xl bg-white dark:bg-[#161616] rounded-[0.75rem] border border-black/10 dark:border-white/10 p-5 md:p-8 shadow-2xl relative overflow-hidden group/card mx-auto"
         >
           {/* Background Glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-neon-light/10 dark:bg-neon/10 blur-[100px] group-hover/card:bg-neon-light/20 dark:group-hover/card:bg-neon/20 transition-colors duration-700" />
@@ -122,10 +146,11 @@ export default function Calculator() {
 
           <div className="space-y-8">
             {/* Input Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-0">
-              <div className="space-y-1 w-full">
+            <div className="flex flex-wrap justify-between items-start gap-4 w-full">
+              {/* Left Side: Amount Input */}
+              <div className="space-y-1 min-w-[200px] flex-grow">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block">{t('selectAmount')}</label>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-1">
                   <input
                     type="text"
                     value={coins.toLocaleString('de-DE')}
@@ -139,18 +164,29 @@ export default function Calculator() {
                         setCoins(0);
                       }
                     }}
-                    className="text-4xl sm:text-5xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-full md:w-[280px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="text-4xl sm:text-5xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter bg-transparent border-none focus:outline-none w-full max-w-[220px] p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pr-1"
                   />
                   <span className="text-neon-light dark:text-neon font-black text-xs uppercase italic tracking-tighter shrink-0">FC 26</span>
                 </div>
               </div>
-              <div className="w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-end items-center md:items-end gap-4 md:gap-0">
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-neon-light/10 dark:bg-neon/10 text-neon-light dark:text-neon text-[10px] font-black mb-0 md:mb-2 uppercase italic border border-neon-light/20 dark:border-neon/20 whitespace-nowrap">
+              
+              {/* Right Side: Price Display */}
+              <div className="flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end gap-3 sm:gap-1 w-full sm:w-auto pt-2 sm:pt-0 shrink-0">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-neon-light/10 dark:bg-neon/10 text-neon-light dark:text-neon text-[10px] sm:text-[10px] font-black uppercase italic border border-neon-light/20 dark:border-neon/20 whitespace-nowrap">
                   <TrendingUp className="w-3 h-3" />
                   <span>{t('bestRate')}</span>
                 </div>
-                <div className="text-3xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter">
-                  ${totalPrice.toFixed(2)}
+                <div className="flex flex-col items-end">
+                  <div className="text-3xl sm:text-4xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter whitespace-nowrap leading-none mb-1">
+                    {isArgentina && exchangeRate 
+                      ? `$${Math.round(totalPrice * exchangeRate).toLocaleString('es-AR')} ARS` 
+                      : `$${totalPrice.toFixed(2)} USD`}
+                  </div>
+                  {isArgentina && exchangeRate && (
+                    <div className="text-[10px] sm:text-xs text-gray-500 font-bold mix-blend-luminosity whitespace-nowrap leading-none">
+                      (${totalPrice.toFixed(2)} USD)
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -208,17 +244,43 @@ export default function Calculator() {
                 </div>
               </div>
 
-              {/* Delivery Time */}
-              <div className="bg-[#FAFAFA] dark:bg-[#0D0D0D] p-4 rounded-xl border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 transition-colors flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500 dark:text-blue-400">
-                    <Info className="w-3.5 h-3.5" />
+              {/* Prominent Delivery Time */}
+              <div className="bg-blue-500/10 dark:bg-blue-500/5 p-4 rounded-xl border border-blue-500/20 dark:border-blue-500/10 flex items-center justify-between relative overflow-hidden group">
+                <div className="absolute inset-0 bg-blue-500/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-30" />
+                    <div className="relative p-2 rounded-xl bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                      <Zap className="w-4 h-4 fill-current" />
+                    </div>
                   </div>
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{t('deliveryTime')}</span>
+                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">{t('deliveryTime')}</span>
                 </div>
-                <span className="text-sm font-black text-[#1A1A1A] dark:text-white italic">{getDeliveryTime()}</span>
+                <div className="flex flex-col items-end relative z-10">
+                  <span className="text-lg font-black text-blue-700 dark:text-blue-300 italic tracking-tighter leading-none">{getDeliveryTime()}</span>
+                  <span className="text-[9px] text-blue-500/70 font-bold uppercase mt-1">Estimado</span>
+                </div>
               </div>
             </div>
+
+            {/* Argentina VPN Info */}
+            {isArgentina && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex gap-3 items-start"
+              >
+                <div className="p-1.5 rounded-lg bg-yellow-500 text-black mt-0.5 shrink-0 shadow-[0_0_15px_rgba(234,179,8,0.5)]">
+                  <Zap className="w-4 h-4 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-yellow-600 dark:text-yellow-400 font-black italic uppercase text-sm mb-1 tracking-tight">¡Aviso Importante para Argentina!</h4>
+                  <p className="text-xs text-yellow-600/80 dark:text-yellow-400/80 font-medium leading-relaxed">
+                    Los precios mostrados no incluyen impuestos locales (Solidario, PAIS, etc). Para pagar el precio real sin impuestos adicionales, te recomendamos usar una <strong className="text-yellow-600 dark:text-yellow-400">VPN de Uruguay o Brasil</strong> al momento del pago.
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             {/* CTA */}
             <div className="space-y-4">

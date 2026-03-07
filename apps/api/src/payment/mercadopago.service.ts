@@ -57,28 +57,41 @@ export class MercadoPagoService {
 
         this.logger.log(`[MP] Creating preference: orderId=${data.orderId}, priceUSD=${data.unitPrice}, dolarBlue=$${usdToArs}, priceARS=$${priceInArs}, email=${data.buyerEmail}`);
 
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+        const successUrl = `${frontendUrl}/order/${data.orderId}/setup`;
+        const failureUrl = `${frontendUrl}/checkout?status=failure`;
+        const pendingUrl = `${frontendUrl}/checkout?status=pending`;
+
+        // Ensure we have a valid-looking email for MP validation
+        const validEmail = data.buyerEmail.includes('@') ? data.buyerEmail : 'test_user_venta@testmail.com';
+
+        const preferenceBody: any = {
+            items: [
+                {
+                    id: data.orderId,
+                    title: data.title,
+                    quantity: data.quantity,
+                    currency_id: 'ARS',
+                    unit_price: priceInArs,
+                },
+            ],
+            payer: {
+                email: validEmail,
+            },
+            external_reference: data.orderId,
+            back_urls: { 
+                success: successUrl,
+                failure: failureUrl,
+                pending: pendingUrl,
+            },
+            // auto_return: 'approved', // Comentado temporalmente para ver si acepta localhost sin redirección automática
+        };
+
+        this.logger.log(`[MP] Preference Payload: ${JSON.stringify(preferenceBody, null, 2)}`);
+
         try {
             const result = await this.preference.create({
-                body: {
-                    items: [
-                        {
-                            id: data.orderId,
-                            title: data.title,
-                            quantity: data.quantity,
-                            unit_price: priceInArs,
-                        },
-                    ],
-                    payer: {
-                        email: data.buyerEmail,
-                    },
-                    external_reference: data.orderId,
-                    back_urls: {
-                        success: `${this.configService.get<string>('FRONTEND_URL')}/order/${data.orderId}/setup`,
-                        failure: `${this.configService.get<string>('FRONTEND_URL')}/checkout?status=failure`,
-                        pending: `${this.configService.get<string>('FRONTEND_URL')}/checkout?status=pending`,
-                    },
-                    auto_return: 'approved',
-                },
+                body: preferenceBody,
             });
 
             this.logger.log(`[MP] Preference created for Order #${data.orderId}: ${result.id}`);

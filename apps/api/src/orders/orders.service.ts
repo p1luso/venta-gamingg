@@ -33,30 +33,35 @@ export class OrdersService {
 
     this.logger.log(`[OrdersService] Creating order for user ${userId}. Amount: ${coin_amount}, Price: ${price_paid}`);
 
-    const order = await this.prisma.order.create({
-      data: {
-        user_id: userId,
-        amount_coins: coin_amount,
-        price_paid: price_paid,
-        status: OrderStatus.PENDING_PAYMENT,
-        paymentMethod: paymentMethod,
-        transfer_status: TransferStatus.WAITING_CREDS,
-      },
-    });
+    try {
+      const order = await this.prisma.order.create({
+        data: {
+          user_id: userId,
+          amount_coins: coin_amount,
+          price_paid: price_paid,
+          status: OrderStatus.PENDING_PAYMENT,
+          paymentMethod: paymentMethod,
+          transfer_status: TransferStatus.WAITING_CREDS,
+        },
+      });
 
-    // Simulando Notificación WA al dueño
-    const receiptUrl = 'receipt' in createOrderDto ? createOrderDto['receipt'] : 'N/A';
-    this.logger.log(`[WA_ALERT] Nueva Orden #${order.id} - Comprobante: ${receiptUrl}`);
+      // Simulando Notificación WA al dueño
+      const receiptUrl = 'receipt' in createOrderDto ? createOrderDto['receipt'] : 'N/A';
+      this.logger.log(`[WA_ALERT] Nueva Orden #${order.id} - Comprobante: ${receiptUrl}`);
 
-    return {
-      message: 'Order created successfully',
-      order: {
-        id: order.id,
-        amount_coins: order.amount_coins,
-        price_paid: order.price_paid,
-        status: order.status,
-      }
-    };
+      return {
+        message: 'Order created successfully',
+        order: {
+          id: order.id,
+          amount_coins: order.amount_coins,
+          price_paid: order.price_paid,
+          status: order.status,
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Error creating order: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async findOne(id: string) {

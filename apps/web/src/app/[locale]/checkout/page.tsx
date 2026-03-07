@@ -53,10 +53,11 @@ function CheckoutContent() {
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const [isSubmittingData, setIsSubmittingData] = useState(false);
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
   const isArgentina = userCountry === 'AR';
 
-  // Detect user country for payment method filtering
+  // Detect user country for payment method filtering and fetch exchange rate
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
@@ -70,10 +71,21 @@ function CheckoutContent() {
         }
       })
       .catch(() => setUserCountry(null)); // Fallback: show all methods
+
+    fetch('https://dolarapi.com/v1/dolares/blue')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.venta) {
+          setExchangeRate(data.venta);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const coins = searchParams.get('coins') || '0';
   const price = searchParams.get('price') || '0';
+  const parsedPrice = parseFloat(price);
+  const priceARS = exchangeRate ? Math.round(parsedPrice * exchangeRate) : 0;
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0];
@@ -443,7 +455,9 @@ function CheckoutContent() {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 dark:text-gray-500 font-medium">{t('subtotal')}</span>
-                <span className="text-[#1A1A1A] dark:text-white font-bold">${price}</span>
+                <span className="text-[#1A1A1A] dark:text-white font-bold">
+                  {isArgentina && exchangeRate ? `$${priceARS.toLocaleString('es-AR')} ARS` : `$${parsedPrice.toFixed(2)} USD`}
+                </span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 dark:text-gray-500 font-medium">{t('serviceFee')}</span>
@@ -454,7 +468,14 @@ function CheckoutContent() {
             <div className="pt-6 border-t border-black/5 dark:border-white/5 flex justify-between items-end">
               <div>
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">{t('totalToPay')}</span>
-                <span className="text-4xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter">${price}</span>
+                <span className="text-4xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter">
+                  {isArgentina && exchangeRate ? `$${priceARS.toLocaleString('es-AR')} ARS` : `$${parsedPrice.toFixed(2)} USD`}
+                </span>
+                {isArgentina && exchangeRate && (
+                  <span className="text-xs text-gray-500 font-bold block mt-1">
+                    (${parsedPrice.toFixed(2)} USD)
+                  </span>
+                )}
               </div>
               <ShieldCheck className="w-10 h-10 text-neon-light/20 dark:text-neon/20" />
             </div>

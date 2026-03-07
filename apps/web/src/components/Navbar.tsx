@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search, Globe, ChevronDown, LogIn, User,
-  LayoutGrid, Coins, Users, Rocket, Menu, X
+  LayoutGrid, Coins, Users, Rocket, Menu, X, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -133,12 +133,12 @@ export default function Navbar() {
         {/* Right Actions - Desktop & Mobile */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6 shrink-0">
           <ThemeToggle />
-          <div className="hidden sm:block relative">
+          <div className="relative">
             <button
               onClick={() => setIsLangOpen(!isLangOpen)}
-              className="flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors text-[9px] sm:text-[10px] md:text-sm font-bold uppercase italic text-gray-500 dark:text-gray-400"
+              className="flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors text-[10px] sm:text-sm font-bold uppercase italic text-gray-500 dark:text-gray-400"
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{currentLocale === 'en' ? 'EN' : 'ES'}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -215,6 +215,17 @@ export default function Navbar() {
                   <span className="text-base font-black uppercase italic tracking-tight">{link.name}</span>
                 </Link>
               ))}
+
+              <Link
+                href={`/${currentLocale}/famosos`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 active:scale-95 transition-all text-black dark:text-white hover:border-yellow-500/40 hover:bg-yellow-500/20"
+              >
+                <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30 shrink-0">
+                  <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400 fill-current" />
+                </div>
+                <span className="text-base font-black uppercase italic tracking-tight text-yellow-700 dark:text-yellow-400">Famosos VIP</span>
+              </Link>
 
               <div className="h-px bg-black/10 dark:bg-white/5 my-2" />
               <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">Language / Idioma</div>
