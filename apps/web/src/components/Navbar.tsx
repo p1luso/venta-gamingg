@@ -33,7 +33,21 @@ export default function Navbar() {
       .then(res => res.json())
       .then(data => {
         if (data.country_code) {
-          setCountryCode(data.country_code.toLowerCase());
+          const code = data.country_code.toLowerCase();
+          setCountryCode(code);
+
+          // Auto-language based on country (only runs once per user)
+          if (!localStorage.getItem('has_auto_localized')) {
+            localStorage.setItem('has_auto_localized', 'true');
+            // List of Spanish-speaking country codes
+            const esCountries = ['ar', 'es', 'uy', 'cl', 'co', 'mx', 'pe', 've', 'bo', 'py', 'ec', 'cr', 'pa', 'do', 'gt', 'hn', 'sv', 'ni', 'pr'];
+            const targetLocale = esCountries.includes(code) ? 'es' : 'en';
+
+            if (currentLocale !== targetLocale) {
+              const currentPath = window.location.pathname.split('/').slice(2).join('/');
+              router.push(`/${targetLocale}/${currentPath}`);
+            }
+          }
         }
       })
       .catch(() => {});

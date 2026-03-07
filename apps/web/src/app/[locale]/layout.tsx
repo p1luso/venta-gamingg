@@ -20,6 +20,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Venta Gamingg - Domina el Mercado de FC 26",
   description: "Monedas, Account Boosting y Cuentas Premium. El servicio más rápido y seguro del mercado.",
+  manifest: "/manifest.json",
+};
+
+export const viewport = {
+  themeColor: "#0A0A0A",
 };
 
 export default async function LocaleLayout({
