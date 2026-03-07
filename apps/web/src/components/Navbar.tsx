@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -18,6 +17,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<{ name: string } | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [countryCode, setCountryCode] = useState<string | null>(null);
 
   const t = useTranslations('Navbar');
   const pathname = usePathname();
@@ -28,6 +28,15 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
+
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.country_code) {
+          setCountryCode(data.country_code.toLowerCase());
+        }
+      })
+      .catch(() => {});
 
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
@@ -132,7 +141,11 @@ export default function Navbar() {
 
         {/* Right Actions - Desktop & Mobile */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6 shrink-0">
-          <ThemeToggle />
+          {countryCode && (
+            <div className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 shrink-0" title={countryCode.toUpperCase()}>
+              <img src={`https://flagcdn.com/w20/${countryCode}.png`} alt={countryCode} className="rounded-[2px] object-cover w-3.5 sm:w-4 md:w-5 shadow-sm" />
+            </div>
+          )}
           <div className="relative">
             <button
               onClick={() => setIsLangOpen(!isLangOpen)}
