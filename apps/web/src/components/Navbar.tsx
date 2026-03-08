@@ -29,11 +29,11 @@ export default function Navbar() {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    fetch('https://ipapi.co/json/')
+    fetch('https://api.country.is/')
       .then(res => res.json())
       .then(data => {
-        if (data.country_code) {
-          const code = data.country_code.toLowerCase();
+        if (data.country) {
+          const code = data.country.toLowerCase();
           setCountryCode(code);
 
           // Auto-language based on country (only runs once per user)
@@ -48,9 +48,13 @@ export default function Navbar() {
               router.push(`/${targetLocale}/${currentPath}`);
             }
           }
+        } else {
+           setCountryCode(currentLocale === 'en' ? 'us' : 'ar');
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setCountryCode(currentLocale === 'en' ? 'us' : 'ar');
+      });
 
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
