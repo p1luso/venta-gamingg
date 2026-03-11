@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { API_URL } from '@/lib/api';
 import { motion } from 'framer-motion';
 import { 
   ShieldAlert, 
@@ -36,7 +37,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const backendUrl = API_URL;
       const response = await fetch(`${backendUrl}/orders/admin/all`);
       if (!response.ok) throw new Error('Failed to fetch admin orders');
       const data = await response.json();

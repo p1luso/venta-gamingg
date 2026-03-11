@@ -5,12 +5,14 @@ import { TransferStatus } from '@prisma/client';
 export interface TransferStatusResponse {
   orderId: string;
   transfer_status: TransferStatus;
-  progress: number;         // 0-100
+  progress: number;         // 0–100
   coins_transferred: number;
   total_coins: number;
   message: string;
   estimated_minutes_remaining: number | null;
 }
+
+const TOTAL_ESTIMATED_MINUTES = 30;
 
 @Injectable()
 export class TransferService {
@@ -25,97 +27,59 @@ export class TransferService {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
 
-    const totalCoins = order.amount_coins;
+    const total = order.amount_coins;
 
     switch (order.transfer_status) {
-      case TransferStatus.WAITING_CREDS: {
-        return {
-          orderId,
-          transfer_status: TransferStatus.WAITING_CREDS,
-          progress: 0,
-          coins_transferred: 0,
-          total_coins: totalCoins,
-          message: 'Esperando credenciales de EA',
-          estimated_minutes_remaining: null,
-        };
-      }
+      case TransferStatus.WAITING_CREDS:
+        return this.build(orderId, total, TransferStatus.WAITING_CREDS, 0, 0, 'Esperando credenciales de EA', null);
 
-      case TransferStatus.QUEUED: {
-        return {
-          orderId,
-          transfer_status: TransferStatus.QUEUED,
-          progress: 5,
-          coins_transferred: 0,
-          total_coins: totalCoins,
-          message: 'En cola — el proceso iniciará pronto',
-          estimated_minutes_remaining: 15,
-        };
-      }
+      case TransferStatus.QUEUED:
+        return this.build(orderId, total, TransferStatus.QUEUED, 5, 0, 'En cola — el proceso iniciará pronto', 15);
 
       case TransferStatus.IN_PROGRESS: {
-        // Simulate elapsed-time-based progress (15-60 min window)
         const startedAt = order.updated_at ?? order.created_at;
-        const elapsedMs = Date.now() - startedAt.getTime();
-        const elapsedMinutes = elapsedMs / 60_000;
-        const TOTAL_ESTIMATED_MINUTES = 30;
+        const elapsedMinutes = (Date.now() - startedAt.getTime()) / 60_000;
 
-        // Progress: 10% base + up to 85% over 30 min, capped at 95 until COMPLETED
-        const timeProgress = Math.min((elapsedMinutes / TOTAL_ESTIMATED_MINUTES) * 85, 85);
-        const progress = Math.round(10 + timeProgress);
-        const coinsTransferred = Math.round((progress / 100) * totalCoins);
-        const minutesRemaining = Math.max(
-          Math.round(TOTAL_ESTIMATED_MINUTES - elapsedMinutes),
-          1,
+        // 10 % base + up to 85 % over TOTAL_ESTIMATED_MINUTES, capped at 95 until COMPLETED
+        const progress = Math.min(Math.round(10 + (elapsedMinutes / TOTAL_ESTIMATED_MINUTES) * 85), 95);
+        const coinsTransferred = Math.round((progress / 100) * total);
+        const eta = Math.max(Math.round(TOTAL_ESTIMATED_MINUTES - elapsedMinutes), 0);
+
+        this.logger.debug(
+          `[Transfer mock] Order ${orderId}: ${progress}% (${elapsedMinutes.toFixed(1)} min elapsed)`,
         );
 
-        this.logger.debug(`[Transfer mock] Order ${orderId}: ${progress}% (${elapsedMinutes.toFixed(1)} min elapsed)`);
-
-        return {
-          orderId,
-          transfer_status: TransferStatus.IN_PROGRESS,
-          progress,
-          coins_transferred: coinsTransferred,
-          total_coins: totalCoins,
-          message: 'Transferencia en progreso',
-          estimated_minutes_remaining: minutesRemaining,
-        };
+        return this.build(orderId, total, TransferStatus.IN_PROGRESS, progress, coinsTransferred, 'Transferencia en progreso', eta);
       }
 
-      case TransferStatus.COMPLETED: {
-        return {
-          orderId,
-          transfer_status: TransferStatus.COMPLETED,
-          progress: 100,
-          coins_transferred: totalCoins,
-          total_coins: totalCoins,
-          message: '¡Transferencia completada exitosamente!',
-          estimated_minutes_remaining: 0,
-        };
-      }
+      case TransferStatus.COMPLETED:
+        return this.build(orderId, total, TransferStatus.COMPLETED, 100, total, '¡Transferencia completada exitosamente!', 0);
 
-      case TransferStatus.ERROR: {
-        return {
-          orderId,
-          transfer_status: TransferStatus.ERROR,
-          progress: 0,
-          coins_transferred: 0,
-          total_coins: totalCoins,
-          message: 'Error en la transferencia — contacta soporte',
-          estimated_minutes_remaining: null,
-        };
-      }
+      case TransferStatus.ERROR:
+        return this.build(orderId, total, TransferStatus.ERROR, 0, 0, 'Error en la transferencia — contacta soporte', null);
 
-      default: {
-        return {
-          orderId,
-          transfer_status: order.transfer_status,
-          progress: 0,
-          coins_transferred: 0,
-          total_coins: totalCoins,
-          message: 'Estado desconocido',
-          estimated_minutes_remaining: null,
-        };
-      }
+      default:
+        return this.build(orderId, total, order.transfer_status, 0, 0, 'Estado desconocido', null);
     }
+  }
+
+  private build(
+    orderId: string,
+    totalCoins: number,
+    status: TransferStatus,
+    progress: number,
+    coinsTransferred: number,
+    message: string,
+    eta: number | null,
+  ): TransferStatusResponse {
+    return {
+      orderId,
+      transfer_status: status,
+      progress,
+      coins_transferred: coinsTransferred,
+      total_coins: totalCoins,
+      message,
+      estimated_minutes_remaining: eta,
+    };
   }
 }

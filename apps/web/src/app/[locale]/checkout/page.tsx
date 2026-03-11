@@ -18,6 +18,7 @@ import {
   Rocket
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { API_URL } from '@/lib/api';
 
 // Custom Icons
 const StripeIcon = () => (
@@ -106,7 +107,7 @@ function CheckoutContent() {
     setLoading(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const backendUrl = API_URL;
       const token = localStorage.getItem('auth_token') || '';
       const authHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
 
