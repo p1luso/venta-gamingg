@@ -1,25 +1,24 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus, TransferStatus } from '@prisma/client';
+import { OrderStatus, Platform, TransferStatus } from '@prisma/client';
 import { EncryptionService } from '../common/services/encryption.service';
+import { TransferService } from '../transfer/transfer.service';
 
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
-  // Mock exchange rate: $0.50 USD per 10k coins
-  // In production this should come from a config or DB
   private readonly PRICE_PER_10K_COINS = 0.50;
 
   constructor(
     private prisma: PrismaService,
-    private encryptionService: EncryptionService
-  ) { }
+    private encryptionService: EncryptionService,
+    private transferService: TransferService,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const { coin_amount, paymentMethod, user_email } = createOrderDto;
+    const { coin_amount, paymentMethod, user_email, platform } = createOrderDto;
 
-    // Find or create user
     let user = await this.prisma.user.findUnique({ where: { email: user_email } });
     if (!user) {
       user = await this.prisma.user.create({
@@ -28,7 +27,6 @@ export class OrdersService {
     }
     const userId = user.id;
 
-    // Zero-Trust: Calculate price on backend
     const price_paid = this.calculatePrice(coin_amount);
 
     this.logger.log(`[OrdersService] Creating order for user ${userId}. Amount: ${coin_amount}, Price: ${price_paid}`);
@@ -41,11 +39,11 @@ export class OrdersService {
           price_paid: price_paid,
           status: OrderStatus.PENDING_PAYMENT,
           paymentMethod: paymentMethod,
+          platform: platform ?? Platform.PS,
           transfer_status: TransferStatus.WAITING_CREDS,
         },
       });
 
-      // Simulando Notificación WA al dueño
       const receiptUrl = 'receipt' in createOrderDto ? createOrderDto['receipt'] : 'N/A';
       this.logger.log(`[WA_ALERT] Nueva Orden #${order.id} - Comprobante: ${receiptUrl}`);
 
@@ -56,6 +54,7 @@ export class OrdersService {
           amount_coins: order.amount_coins,
           price_paid: order.price_paid,
           status: order.status,
+          platform: order.platform,
         }
       };
     } catch (error) {
@@ -81,7 +80,7 @@ export class OrdersService {
     const encryptedPassword = this.encryptionService.encrypt(data.password);
     const encryptedBackupCodes = this.encryptionService.encrypt(JSON.stringify(data.backupCodes));
 
-    return this.prisma.order.update({
+    const order = await this.prisma.order.update({
       where: { id },
       data: {
         ea_email: encryptedEmail,
@@ -90,6 +89,16 @@ export class OrdersService {
         transfer_status: TransferStatus.QUEUED,
       },
     });
+
+    // Trigger FUT Transfer API immediately
+    try {
+      await this.transferService.startFutTransfer(id);
+      this.logger.log(`[OrdersService] FUT Transfer started for order ${id}`);
+    } catch (error) {
+      this.logger.error(`[OrdersService] Failed to start FUT Transfer for order ${id}: ${error.message}`);
+    }
+
+    return order;
   }
 
   async findAllAdmin() {
@@ -126,9 +135,6 @@ export class OrdersService {
   }
 
   private calculatePrice(amount: number): number {
-    // 10000 coins = $0.50
-    // amount coins = ?
-    // ? = (amount / 10000) * 0.50
     return (amount / 10000) * this.PRICE_PER_10K_COINS;
   }
 }
