@@ -31,6 +31,12 @@ enum TransferStatus {
   ERROR
 }
 
+enum Platform {
+  PS
+  XB
+  PC
+}
+
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
@@ -50,12 +56,16 @@ model Order {
   price_paid           Decimal        @db.Decimal(10, 2)
   status               OrderStatus    @default(PENDING_PAYMENT)
   paymentMethod        PaymentMethod
+  platform             Platform       @default(PS)
   transfer_status      TransferStatus @default(WAITING_CREDS)
   fut_transfer_id      String?
+  coins_transferred    Int            @default(0)
+  fut_account_check    String?
+  fut_economy_state    String?
   ea_email             String?
   ea_password          String?
   ea_backup_codes      String?
-  ea_account_encrypted String? // Encrypted JSON blob as fallback or legacy
+  ea_account_encrypted String?
   proof_image_url      String?
   created_at           DateTime       @default(now())
   updated_at           DateTime       @updatedAt

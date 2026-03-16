@@ -263,24 +263,7 @@ export default function Calculator() {
               </div>
             </div>
 
-            {/* Argentina VPN Info */}
-            {isArgentina && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex gap-3 items-start"
-              >
-                <div className="p-1.5 rounded-lg bg-yellow-500 text-black mt-0.5 shrink-0 shadow-[0_0_15px_rgba(234,179,8,0.5)]">
-                  <Zap className="w-4 h-4 fill-current" />
-                </div>
-                <div>
-                  <h4 className="text-yellow-600 dark:text-yellow-400 font-black italic uppercase text-sm mb-1 tracking-tight">¡Aviso Importante para Argentina!</h4>
-                  <p className="text-xs text-yellow-600/80 dark:text-yellow-400/80 font-medium leading-relaxed">
-                    Los precios mostrados no incluyen impuestos locales (Solidario, PAIS, etc). Para pagar el precio real sin impuestos adicionales, te recomendamos usar una <strong className="text-yellow-600 dark:text-yellow-400">VPN de Uruguay o Brasil</strong> al momento del pago.
-                  </p>
-                </div>
-              </motion.div>
-            )}
+
 
             {/* CTA */}
             <div className="space-y-4">
