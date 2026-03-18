@@ -14,8 +14,6 @@ import {
   Wallet,
   Building2,
   X,
-  Lock,
-  Rocket
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { API_URL } from '@/lib/api';
@@ -29,7 +27,7 @@ const StripeIcon = () => (
 
 const MercadoPagoIcon = () => (
   <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-    <path d="M14.6 12.4c0 .8-.5 1.4-1.1 1.6l4.3 8h-3l-3.3-6.5Ñh-1.3v6.5h-2.5v-16h4.5c2.1 0 3.7 1.1 3.7 3.2 0 1.5-.9 2.7-2.3 3.2zM12.7 8h-2v2.5h2c.8 0 1.4-.5 1.4-1.2 0-.8-.6-1.3-1.4-1.3z" />
+    <path d="M14.6 12.4c0 .8-.5 1.4-1.1 1.6l4.3 8h-3l-3.3-6.5h-1.3v6.5h-2.5v-16h4.5c2.1 0 3.7 1.1 3.7 3.2 0 1.5-.9 2.7-2.3 3.2zM12.7 8h-2v2.5h2c.8 0 1.4-.5 1.4-1.2 0-.8-.6-1.3-1.4-1.3z" />
     <path d="M5.5 18h2.8l2.5-12h-3L5.5 18z" opacity=".5" />
   </svg>
 );
@@ -42,36 +40,29 @@ function CheckoutContent() {
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'es';
   const t = useTranslations('Checkout');
+
   const [method, setMethod] = useState<PaymentMethod>('STRIPE');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [eaEmail, setEaEmail] = useState('');
-  const [eaPassword, setEaPassword] = useState('');
-  const [backupCodes, setBackupCodes] = useState(['', '', '']);
-  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
-  const [isSubmittingData, setIsSubmittingData] = useState(false);
   const [userCountry, setUserCountry] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
   const isArgentina = userCountry === 'AR';
 
-  // Detect user country for payment method filtering and fetch exchange rate
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
         setUserCountry(data.country_code || null);
-        // Auto-select the best payment method for the region
         if (data.country_code === 'AR') {
           setMethod('MERCADOPAGO');
         } else {
           setMethod('STRIPE');
         }
       })
-      .catch(() => setUserCountry(null)); // Fallback: show all methods
+      .catch(() => setUserCountry(null));
 
     fetch('https://dolarapi.com/v1/dolares/blue')
       .then(res => res.json())
@@ -85,6 +76,7 @@ function CheckoutContent() {
 
   const coins = searchParams.get('coins') || '0';
   const price = searchParams.get('price') || '0';
+  const platform = searchParams.get('platform') || 'PS';
   const parsedPrice = parseFloat(price);
   const priceARS = exchangeRate ? Math.round(parsedPrice * exchangeRate) : 0;
 
@@ -111,7 +103,7 @@ function CheckoutContent() {
       const token = localStorage.getItem('auth_token') || '';
       const authHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      // Step 1: Create the order
+      // Step 1: Create the order with platform
       const orderRes = await fetch(`${backendUrl}/orders`, {
         method: 'POST',
         headers: {
@@ -122,6 +114,7 @@ function CheckoutContent() {
           user_email: email,
           coin_amount: parseInt(coins),
           paymentMethod: method,
+          platform,
         }),
       });
 
@@ -135,7 +128,6 @@ function CheckoutContent() {
 
       // Step 2: Handle payment based on method
       if (method === 'MERCADOPAGO') {
-        // Create MercadoPago preference and redirect
         const mpRes = await fetch(`${backendUrl}/payments/mercadopago`, {
           method: 'POST',
           headers: {
@@ -154,13 +146,11 @@ function CheckoutContent() {
         if (!mpRes.ok) throw new Error('Failed to create MercadoPago preference');
 
         const mpData = await mpRes.json();
-        // Redirect to MercadoPago checkout (sandbox for testing)
         window.location.href = mpData.sandboxInitPoint || mpData.initPoint;
         return;
       }
 
       if (method === 'TRANSFER' && file) {
-        // Upload receipt
         const formData = new FormData();
         formData.append('file', file);
 
@@ -171,9 +161,8 @@ function CheckoutContent() {
         });
       }
 
-      // For STRIPE (placeholder) and TRANSFER (after upload), show success
-      setIsSuccess(true);
-      setTimeout(() => router.push(`/${locale}`), 3000);
+      // For STRIPE and TRANSFER: redirect to the real setup page
+      router.push(`/${locale}/order/${orderId}/setup`);
     } catch (error) {
       console.error('Checkout error:', error);
       alert('Hubo un error al procesar tu orden. ' + (error instanceof Error ? error.message : ''));
@@ -181,133 +170,6 @@ function CheckoutContent() {
       setLoading(false);
     }
   };
-
-  const handleFUTSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmittingData(true);
-    // simulated API call to submit EA Data
-    setTimeout(() => {
-      setIsSubmittingData(false);
-      setIsDataSubmitted(true);
-    }, 1500);
-  };
-
-  if (isSuccess) {
-    if (!isDataSubmitted) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-2xl mx-auto py-12"
-        >
-          <div className="w-full bg-white dark:bg-[#161616] border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-sm dark:shadow-2xl">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-neon-light/10 dark:bg-neon/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-neon-light/20 dark:border-neon/20">
-                <CheckCircle2 className="w-8 h-8 text-neon-light dark:text-neon" />
-              </div>
-              <h2 className="text-3xl font-black text-[#1A1A1A] dark:text-white italic uppercase mb-2 tracking-tight">{t('orderReceived')}</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
-                {t('thankYou')} {t('completeFutData') || "Por favor, completa tus datos de EA para comenzar el envío."}
-              </p>
-            </div>
-
-            <div className="mb-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
-              <Lock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">{t('endToEndEncryption') || "Tus datos están encriptados"}</h4>
-                <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium leading-relaxed">
-                  {t('encryptionDesc') || "Nadie, excepto el sistema automatizado, tiene acceso a tu información. Tu cuenta está segura al 100% mediante cifrado end-to-end."}
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleFUTSubmit} className="space-y-6 text-left">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">EA Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={eaEmail}
-                    onChange={(e) => setEaEmail(e.target.value)}
-                    placeholder="tu-email@ejemplo.com"
-                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-4 text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">EA Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={eaPassword}
-                    onChange={(e) => setEaPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-4 text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Backup Codes (x3)</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[0, 1, 2].map((idx) => (
-                      <input
-                        key={idx}
-                        type="text"
-                        required
-                        maxLength={8}
-                        value={backupCodes[idx]}
-                        onChange={(e) => {
-                          const newCodes = [...backupCodes];
-                          newCodes[idx] = e.target.value;
-                          setBackupCodes(newCodes);
-                        }}
-                        placeholder="12345678"
-                        className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/10 dark:border-white/5 rounded-xl py-3 px-3 text-center font-mono text-sm text-[#1A1A1A] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-neon-light)] dark:focus:border-[var(--color-neon)] transition-all uppercase"
-                      />
-                    ))}
-                  </div>
-                  <a href="https://myaccount.ea.com/cp-ui/security/index" target="_blank" rel="noreferrer" className="text-[10px] text-[var(--color-neon-light)] dark:text-[var(--color-neon)] hover:underline mt-2 inline-block font-bold">
-                    {t('howToGetBackupCodes') || "¿Cómo obtengo mis Backup Codes?"}
-                  </a>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmittingData}
-                className="w-full neon-button py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(0,255,136,0.3)] mt-6"
-              >
-                {isSubmittingData ? <Loader2 className="w-5 h-5 animate-spin" /> : (t('startBoost') || 'Comenzar')}
-              </button>
-            </form>
-          </div>
-        </motion.div>
-      );
-    }
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex-1 flex flex-col items-center justify-center text-center p-6 w-full max-w-lg mx-auto"
-      >
-        <div className="w-24 h-24 bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 rounded-[2rem] flex items-center justify-center mb-8 shadow-sm dark:shadow-[0_0_40px_rgba(0,255,136,0.2)]">
-          <Rocket className="w-12 h-12 text-neon-light dark:text-neon" />
-        </div>
-        <h2 className="text-4xl font-black text-[#1A1A1A] dark:text-white italic uppercase mb-4 tracking-tighter">{t('processingOrder') || "¡Todo Listo!"}</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium max-w-sm mb-10 leading-relaxed">
-          {t('processingDesc') || "Tus datos han sido recibidos. Nuestro sistema automatizado está iniciando sesión de forma segura para transferir tus monedas."}
-        </p>
-        <div className="flex justify-center gap-4">
-          <button onClick={() => router.push(`/${locale}`)} className="text-[#1A1A1A] dark:text-white bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-            {t('backToHome')}
-          </button>
-          <button onClick={() => router.push(`/${locale}`)} className="neon-button px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest hover:shadow-[0_0_20px_rgba(0,255,136,0.3)] transition-all">
-            {t('trackOrder') || "Seguir Pedido"}
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-12">
@@ -349,7 +211,6 @@ function CheckoutContent() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {/* Stripe: visible for non-AR countries */}
               {!isArgentina && (
                 <PaymentOption
                   active={method === 'STRIPE'}
@@ -359,7 +220,6 @@ function CheckoutContent() {
                   subtitle="Powered by Stripe"
                 />
               )}
-              {/* MercadoPago: visible for Argentina */}
               {(isArgentina || userCountry === null) && (
                 <PaymentOption
                   active={method === 'MERCADOPAGO'}
@@ -369,7 +229,6 @@ function CheckoutContent() {
                   subtitle="Pagos Locales (ARS)"
                 />
               )}
-              {/* Bank Transfer: visible for Argentina */}
               {(isArgentina || userCountry === null) && (
                 <PaymentOption
                   active={method === 'TRANSFER'}
@@ -453,6 +312,10 @@ function CheckoutContent() {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 dark:text-gray-500 font-medium">{t('quantity')}</span>
                 <span className="text-[#1A1A1A] dark:text-white font-bold italic">{parseInt(coins).toLocaleString()} FC 26 Coins</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('platform') || 'Platform'}</span>
+                <span className="text-[#1A1A1A] dark:text-white font-bold italic uppercase">{platform}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 dark:text-gray-500 font-medium">{t('subtotal')}</span>

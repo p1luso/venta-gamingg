@@ -62,9 +62,10 @@ export default function Calculator() {
 
   const handleBuyNow = () => {
     setIsLoading(true);
-    // Simulate a small delay for the animation
+    const platformMap: Record<string, string> = { ps: 'PS', xbox: 'XB', pc: 'PC' };
+    const backendPlatform = platformMap[platform] || 'PS';
     setTimeout(() => {
-      router.push(`/${locale}/checkout?coins=${coins}&price=${totalPrice.toFixed(2)}&platform=${platform}`);
+      router.push(`/${locale}/checkout?coins=${coins}&price=${totalPrice.toFixed(2)}&platform=${backendPlatform}`);
     }, 800);
   };
 
