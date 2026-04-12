@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums — Order / Payment
+// ─────────────────────────────────────────────────────────────────────────────
+
 enum OrderStatus {
   PENDING_PAYMENT
   PENDING_APPROVAL
@@ -37,13 +41,40 @@ enum Platform {
   PC
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums — Loyalty & Roles (Fase 3)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────────────────────────────────────
+
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
   username      String?
   password_hash String?
-  created_at    DateTime @default(now())
-  orders        Order[]
+
+  // Loyalty & permissions (Fase 3)
+  role            UserRole @default(USER)
+  tier            UserTier @default(BRONZE)
+  wallet_balance  Decimal  @default(0.00) @db.Decimal(10, 2)
+  xp_points       Int      @default(0)
+
+  created_at DateTime @default(now())
+  orders     Order[]
 
   @@map("users")
 }
@@ -67,8 +98,13 @@ model Order {
   ea_backup_codes      String?
   ea_account_encrypted String?
   proof_image_url      String?
-  created_at           DateTime       @default(now())
-  updated_at           DateTime       @updatedAt
+
+  // Loyalty — cashback y uso de wallet (Fase 3)
+  cashback_earned Decimal @default(0.00) @db.Decimal(10, 2)
+  wallet_used     Decimal @default(0.00) @db.Decimal(10, 2)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("orders")
 }

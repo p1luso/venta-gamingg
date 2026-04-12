@@ -5,7 +5,9 @@
     "catalog": "Catalog",
     "fcCoins": "FC Coins",
     "fcPlayers": "FC Players",
-    "boosting": "Boosting"
+    "boosting": "Boosting",
+    "profile": "My Profile",
+    "logout": "Logout"
   },
   "Home": {
     "liveMarketPrices": "Live Market Prices",
@@ -189,5 +191,23 @@
     "secureTransfer": "Secure Transfer",
     "deliveryMinutes": "Delivery in minutes",
     "vipSupport": "VIP Support"
+  },
+  "Dashboard": {
+    "title": "My Dashboard",
+    "welcome": "Welcome, {name}",
+    "walletBalance": "Wallet Balance",
+    "tierProgress": "Tier Progress",
+    "currentTier": "Current Tier",
+    "nextTier": "Next Tier",
+    "xpToNext": "{amount} XP to {tier}",
+    "maxTierReached": "You have reached the maximum rank",
+    "recentOrders": "Recent Orders",
+    "noOrders": "You don't have any orders yet",
+    "orderId": "Order",
+    "status": "Status",
+    "amount": "Amount",
+    "date": "Date",
+    "cashback": "Cashback",
+    "viewDetails": "View Details"
   }
 }

@@ -5,7 +5,9 @@
     "catalog": "Catálogo",
     "fcCoins": "FC Coins",
     "fcPlayers": "FC Players",
-    "boosting": "Boosting"
+    "boosting": "Boosting",
+    "profile": "Mi Perfil",
+    "logout": "Cerrar Sesión"
   },
   "Home": {
     "liveMarketPrices": "Precios de Mercado en Vivo",
@@ -189,5 +191,23 @@
     "secureTransfer": "Transferencia Segura",
     "deliveryMinutes": "Entrega en minutos",
     "vipSupport": "Soporte VIP"
+  },
+  "Dashboard": {
+    "title": "Mi Panel",
+    "welcome": "Bienvenido, {name}",
+    "walletBalance": "Balance de Billetera",
+    "tierProgress": "Progreso de Nivel",
+    "currentTier": "Nivel Actual",
+    "nextTier": "Siguiente Nivel",
+    "xpToNext": "{amount} XP para {tier}",
+    "maxTierReached": "Has alcanzado el nivel máximo",
+    "recentOrders": "Órdenes Recientes",
+    "noOrders": "Aún no tienes órdenes",
+    "orderId": "Pedido",
+    "status": "Estado",
+    "amount": "Cantidad",
+    "date": "Fecha",
+    "cashback": "Cashback",
+    "viewDetails": "Ver Detalles"
   }
 }

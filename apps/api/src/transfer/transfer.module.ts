@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TransferService } from './transfer.service';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
 import { TransferController } from './transfer.controller';
 
 @Module({
   imports: [
+    LoyaltyModule,
     HttpModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

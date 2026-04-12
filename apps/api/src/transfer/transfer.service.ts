@@ -10,6 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptionService } from '../common/services/encryption.service';
 import { TransferStatus } from '@prisma/client';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 
@@ -51,6 +52,7 @@ export class TransferService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly encryptionService: EncryptionService,
+    private readonly loyaltyService: LoyaltyService,
   ) {
     this.apiUser = this.configService.get<string>('FUT_TRANSFER_API_USER', '');
     const rawKey = this.configService.get<string>('FUT_TRANSFER_API_KEY', '');

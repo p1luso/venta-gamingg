@@ -19,4 +19,9 @@ export class CreateOrderDto {
   @IsEnum(Platform)
   @IsOptional()
   platform?: Platform;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  wallet_used?: number;
 }

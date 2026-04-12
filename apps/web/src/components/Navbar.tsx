@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search, Globe, ChevronDown, LogIn, User,
-  LayoutGrid, Coins, Users, Rocket, Menu, X, Star
+  LayoutGrid, Coins, Users, Rocket, Menu, X, Star, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState<{ name: string } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [countryCode, setCountryCode] = useState<string | null>(null);
@@ -82,7 +83,17 @@ export default function Navbar() {
     const path = pathname.split('/').slice(2).join('/');
     router.push(`/${newLocale}/${path}`);
     setIsLangOpen(false);
+    setIsProfileOpen(false);
     setIsMobileMenuOpen(false); // Close mobile menu if open
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsProfileOpen(false);
+    router.push(`/${currentLocale}`);
+    window.location.reload();
   };
 
   const navLinks = [
@@ -190,14 +201,59 @@ export default function Navbar() {
           </div>
 
           {user ? (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center gap-1.5 md:gap-2 bg-black/5 dark:bg-white/10 text-black dark:text-white w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide hover:bg-black/10 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10 shrink-0"
-            >
-              <User className="w-4 h-4 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">{user.name}</span>
-            </motion.button>
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center justify-center gap-1.5 md:gap-2 bg-black/5 dark:bg-white/10 text-black dark:text-white h-9 sm:h-10 md:h-11 px-3 sm:px-4 md:px-6 rounded-full font-black text-[10px] md:text-sm uppercase italic tracking-wide hover:bg-black/10 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10 shrink-0"
+              >
+                <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[var(--color-neon-light)]/20 dark:bg-neon/20 flex items-center justify-center text-[var(--color-neon-light)] dark:text-neon overflow-hidden border border-[var(--color-neon-light)]/20 dark:border-neon/20">
+                  <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </div>
+                <span className="hidden sm:inline">{user.name}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+              </motion.button>
+
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <>
+                    {/* Overlay to close when clicking outside */}
+                    <div 
+                      className="fixed inset-0 z-[-1]" 
+                      onClick={() => setIsProfileOpen(false)} 
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-3 w-56 pt-2 z-50 origin-top-right"
+                    >
+                      <div className="bg-white dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
+                        <Link
+                          href={`/${currentLocale}/profile`}
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-[#00FF88]/10 hover:text-[var(--color-neon-light)] dark:hover:text-neon group transition-all text-black dark:text-white"
+                        >
+                          <User className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-[var(--color-neon-light)] dark:group-hover:text-neon" />
+                          <span className="text-sm font-bold uppercase italic tracking-tight">{t('profile')}</span>
+                        </Link>
+                        
+                        <div className="h-px bg-black/10 dark:bg-white/10 my-1 mx-2" />
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 group transition-all text-black dark:text-white"
+                        >
+                          <LogOut className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+                          <span className="text-sm font-bold uppercase italic tracking-tight">{t('logout')}</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -232,6 +288,34 @@ export default function Navbar() {
             className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-[#0A0A0A] border-b border-black/5 dark:border-white/5 overflow-y-auto backdrop-blur-3xl shadow-2xl z-40 pb-24"
           >
             <div className="flex flex-col px-4 py-8 gap-4 max-w-sm mx-auto">
+              {user && (
+                <>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">{t('profile')}</div>
+                  <Link
+                    href={`/${currentLocale}/profile`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-black/5 dark:bg-[#121212] border border-black/5 dark:border-white/5 active:scale-95 transition-all text-black dark:text-white"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[var(--color-neon-light)]/10 dark:bg-neon/10 flex items-center justify-center border border-[var(--color-neon-light)]/20 dark:border-neon/20 shrink-0">
+                      <User className="w-5 h-5 text-[var(--color-neon-light)] dark:text-neon" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-base font-black uppercase italic tracking-tight">{user.name}</span>
+                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('profile')}</span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-red-500/5 border border-red-500/10 active:scale-95 transition-all text-red-500"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20 shrink-0">
+                      <LogOut className="w-5 h-5 text-red-500" />
+                    </div>
+                    <span className="text-base font-black uppercase italic tracking-tight">{t('logout')}</span>
+                  </button>
+                  <div className="h-px bg-black/10 dark:bg-white/5 my-2" />
+                </>
+              )}
               <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">{t('catalog')}</div>
               {navLinks.map((link) => (
                 <Link
