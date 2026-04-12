@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, IsPositive, Min, Max, IsEnum, IsOptional } from 'class-validator';
-import { PaymentMethod, Platform } from '@prisma/client';
+import { PaymentMethod, Platform, TransferMethod } from '@prisma/client';
 
 export class CreateOrderDto {
   @IsNumber()
@@ -19,6 +19,10 @@ export class CreateOrderDto {
   @IsEnum(Platform)
   @IsOptional()
   platform?: Platform;
+
+  @IsEnum(TransferMethod)
+  @IsOptional()
+  transferMethod?: TransferMethod;
 
   @IsNumber()
   @IsOptional()

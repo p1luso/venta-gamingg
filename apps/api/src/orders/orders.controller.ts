@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Get, Param, Patch, Request } from '@
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminUpdateOrderDto } from './dto/admin-update-order.dto';
+import { UpdateSetupDto } from './dto/update-setup.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('orders')
@@ -55,6 +56,16 @@ export class OrdersController {
   @Get('my-orders')
   myOrders(@Request() req: { user: { userId: string } }) {
     return this.ordersService.myOrders(req.user.userId);
+  }
+
+  /**
+   * PATCH /orders/:id/setup
+   * Unified setup: saves EA credentials (COMFORT_TRADE) or auction data (PLAYER_AUCTION).
+   * Called from the order setup page after the user chooses a transfer method.
+   */
+  @Patch(':id/setup')
+  saveSetupData(@Param('id') id: string, @Body() dto: UpdateSetupDto) {
+    return this.ordersService.saveSetupData(id, dto);
   }
 
   /** GET /orders/:id — single order. JWT required. Must come LAST among @Get routes. */

@@ -35,6 +35,12 @@ enum TransferStatus {
   ERROR
 }
 
+
+enum TransferMethod {
+  COMFORT_TRADE
+  PLAYER_AUCTION
+}
+
 enum Platform {
   PS
   XB
@@ -98,6 +104,15 @@ model Order {
   ea_backup_codes      String?
   ea_account_encrypted String?
   proof_image_url      String?
+
+  // Transfer method (Fase 4)
+  transferMethod        TransferMethod @default(COMFORT_TRADE)
+
+  // Player Auction fields (only when transferMethod = PLAYER_AUCTION)
+  auctionPlayerName     String?
+  auctionPlayerRating   Int?
+  auctionStartPrice     Decimal? @db.Decimal(10, 2)
+  auctionBuyNowPrice    Decimal? @db.Decimal(10, 2)
 
   // Loyalty — cashback y uso de wallet (Fase 3)
   cashback_earned Decimal @default(0.00) @db.Decimal(10, 2)

@@ -84,7 +84,7 @@ export class MercadoPagoService {
                 failure: failureUrl,
                 pending: pendingUrl,
             },
-            // auto_return: 'approved', // Comentado temporalmente para ver si acepta localhost sin redirección automática
+            // auto_return: 'approved',
         };
 
         this.logger.log(`[MP] Preference Payload: ${JSON.stringify(preferenceBody, null, 2)}`);

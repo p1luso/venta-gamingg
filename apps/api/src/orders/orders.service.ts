@@ -1,8 +1,9 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminUpdateOrderDto } from './dto/admin-update-order.dto';
+import { UpdateSetupDto } from './dto/update-setup.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus, Platform, TransferStatus } from '@prisma/client';
+import { OrderStatus, Platform, TransferStatus, TransferMethod } from '@prisma/client';
 import { EncryptionService } from '../common/services/encryption.service';
 import { TransferService } from '../transfer/transfer.service';
 
@@ -29,7 +30,7 @@ export class OrdersService {
   // ── Public / checkout ───────────────────────────────────────────────────────
 
   async create(createOrderDto: CreateOrderDto) {
-    const { coin_amount, paymentMethod, user_email, platform, wallet_used } = createOrderDto;
+    const { coin_amount, paymentMethod, user_email, platform, wallet_used, transferMethod } = createOrderDto;
 
     let user = await this.prisma.user.findUnique({ where: { email: user_email } });
     if (!user) {
@@ -111,6 +112,49 @@ export class OrdersService {
     }
 
     return order;
+  }
+
+
+  /**
+   * Unified setup endpoint — handles both COMFORT_TRADE (EA credentials)
+   * and PLAYER_AUCTION (player info). Only COMFORT_TRADE triggers the bot.
+   */
+  async saveSetupData(id: string, dto: UpdateSetupDto) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) throw new NotFoundException(`Order ${id} not found`);
+
+    if (dto.transferMethod === TransferMethod.PLAYER_AUCTION) {
+      // Save auction data and flag for manual admin processing — no bot trigger
+      await this.prisma.order.update({
+        where: { id },
+        data: {
+          transferMethod: TransferMethod.PLAYER_AUCTION,
+          transfer_status: TransferStatus.QUEUED, // admin sees it as pending
+          auctionPlayerName: dto.auctionPlayerName,
+          auctionPlayerRating: dto.auctionPlayerRating,
+          auctionStartPrice: dto.auctionStartPrice,
+          auctionBuyNowPrice: dto.auctionBuyNowPrice,
+        },
+      });
+
+      this.logger.log(
+        `[Setup] Order ${id} → PLAYER_AUCTION: ${dto.auctionPlayerName} (${dto.auctionPlayerRating}★) ` +
+        `start=$${dto.auctionStartPrice} buynow=$${dto.auctionBuyNowPrice}`,
+      );
+
+      return { message: 'Auction data saved. Awaiting manual processing.' };
+    }
+
+    // COMFORT_TRADE — encrypt credentials and trigger bot
+    if (!dto.email || !dto.password || !dto.backupCodes?.length) {
+      throw new Error('email, password and backupCodes are required for COMFORT_TRADE');
+    }
+
+    return this.updateCredentials(id, {
+      email: dto.email,
+      password: dto.password,
+      backupCodes: dto.backupCodes,
+    });
   }
 
   // ── Admin ───────────────────────────────────────────────────────────────────

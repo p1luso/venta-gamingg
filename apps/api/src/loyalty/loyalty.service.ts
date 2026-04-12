@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../notification/email.service';
 import { UserTier } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
@@ -23,7 +24,10 @@ const XP_PER_USD = 10;
 export class LoyaltyService {
   private readonly logger = new Logger(LoyaltyService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private email: EmailService,
+  ) {}
 
   getTierForXp(xp: number): TierConfig {
     for (let i = TIER_CONFIG.length - 1; i >= 0; i--) {
@@ -110,5 +114,10 @@ export class LoyaltyService {
         data: { cashback_earned: new Decimal(cashback) },
       }),
     ]);
+
+    // Fire-and-forget email — don't let email failure break the loyalty flow
+    this.email
+      .sendOrderCompletedEmail(order.user.email, orderId, order.amount_coins, cashback)
+      .catch((err) => this.logger.error(`[Loyalty] Email failed: ${err.message}`));
   }
 }

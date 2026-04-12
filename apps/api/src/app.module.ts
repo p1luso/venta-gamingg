@@ -13,6 +13,9 @@ import { PaymentModule } from './payment/payment.module';
 import { TrustpilotModule } from './trustpilot/trustpilot.module';
 import { CommonModule } from './common/common.module';
 import { UsersModule } from './users/users.module';
+import { NotificationModule } from './notification/notification.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { UsersModule } from './users/users.module';
       serveRoot: '/uploads',
     }),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{ name: 'global', ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthModule,
     OrdersModule,
@@ -32,8 +36,12 @@ import { UsersModule } from './users/users.module';
     TrustpilotModule,
     CommonModule,
     UsersModule,
+    NotificationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule { }
