@@ -34,6 +34,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         email,
+        username,
         password_hash,
       },
     });
@@ -46,6 +47,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         role: user.role,
         tier: user.tier,
         wallet_balance: user.wallet_balance.toString(),
@@ -71,13 +73,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, username: user.username, role: user.role };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         role: user.role,
         tier: user.tier,
         wallet_balance: user.wallet_balance.toString(),
@@ -101,7 +104,7 @@ export class AuthService {
     return user;
   }
 
-  generateToken(payload: { sub: string; email: string; name?: string }) {
+  generateToken(payload: { sub: string; email: string; username?: string; name?: string }) {
     return this.jwtService.sign(payload);
   }
 }

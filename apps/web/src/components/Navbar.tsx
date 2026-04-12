@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search, Globe, ChevronDown, LogIn, User,
-  LayoutGrid, Coins, Users, Rocket, Menu, X, Star, LogOut
+  LayoutGrid, Coins, Users, Rocket, Menu, X, Star, LogOut, UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import AuthModal from './AuthModal';
 
 export default function Navbar() {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -19,6 +20,8 @@ export default function Navbar() {
   const [user, setUser] = useState<{ name: string } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authInitialTab, setAuthInitialTab] = useState<'login' | 'register'>('login');
 
   const t = useTranslations('Navbar');
   const pathname = usePathname();
@@ -65,7 +68,7 @@ export default function Navbar() {
       window.history.replaceState({}, document.title, window.location.pathname);
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const userData = { name: payload.name || payload.email || 'User' };
+        const userData = { name: payload.username || payload.name || payload.email || 'User' };
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
       } catch (e) {
@@ -94,6 +97,12 @@ export default function Navbar() {
     setIsProfileOpen(false);
     router.push(`/${currentLocale}`);
     window.location.reload();
+  };
+
+  const openAuthModal = (tab: 'login' | 'register') => {
+    setAuthInitialTab(tab);
+    setIsAuthModalOpen(true);
+    setIsMobileMenuOpen(false);
   };
 
   const navLinks = [
@@ -255,15 +264,27 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
-              className="neon-button flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 w-9 h-9 sm:w-auto sm:h-auto sm:px-3 md:px-6 sm:py-1.5 md:py-2.5 rounded-full font-black text-[9px] sm:text-[10px] md:text-sm uppercase italic tracking-wide shrink-0"
-            >
-              <LogIn className="w-4 h-4 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">{t('login')}</span>
-            </motion.button>
+            <div className="flex items-center gap-2 md:gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => openAuthModal('login')}
+                className="flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-full font-black text-[10px] md:text-sm uppercase italic tracking-wide text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('login')}</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => openAuthModal('register')}
+                className="neon-button flex items-center justify-center gap-1.5 md:gap-2 px-4 md:px-7 py-2 md:py-2.5 rounded-full font-black text-[10px] md:text-sm uppercase italic tracking-wide shrink-0 shadow-[0_0_15px_rgba(0,255,136,0.2)]"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('register')}</span>
+              </motion.button>
+            </div>
           )}
 
           {/* Mobile Menu Toggle */}
@@ -316,6 +337,24 @@ export default function Navbar() {
                   <div className="h-px bg-black/10 dark:bg-white/5 my-2" />
                 </>
               )}
+
+              {!user && (
+                <div className="flex flex-col gap-3 py-2">
+                  <button
+                    onClick={() => openAuthModal('register')}
+                    className="w-full py-4 rounded-2xl bg-neon text-black font-black italic uppercase tracking-[0.2em] text-xs shadow-[0_4px_20px_rgba(0,255,136,0.2)]"
+                  >
+                    {t('register')}
+                  </button>
+                  <button
+                    onClick={() => openAuthModal('login')}
+                    className="w-full py-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-black dark:text-white font-black italic uppercase tracking-[0.2em] text-xs"
+                  >
+                    {t('login')}
+                  </button>
+                  <div className="h-px bg-black/10 dark:bg-white/5 my-2" />
+                </div>
+              )}
               <div className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2 mb-2">{t('catalog')}</div>
               {navLinks.map((link) => (
                 <Link
@@ -362,6 +401,12 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        initialTab={authInitialTab} 
+      />
     </nav>
   );
 }

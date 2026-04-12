@@ -30,7 +30,12 @@ export class AuthController {
   async googleAuthRedirect(@Req() req, @Res() res) {
     // Generate JWT from the Google user
     const user = req.user;
-    const payload = { sub: user.id, email: user.email, name: user.username || user.email };
+    const payload = { 
+      sub: user.id, 
+      email: user.email, 
+      username: user.username,
+      name: user.username || user.email 
+    };
     const token = this.authService.generateToken(payload);
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

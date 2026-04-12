@@ -7,7 +7,8 @@
     "fcPlayers": "FC Players",
     "boosting": "Boosting",
     "profile": "My Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "register": "Create Account"
   },
   "Home": {
     "liveMarketPrices": "Live Market Prices",
@@ -208,6 +209,51 @@
     "amount": "Amount",
     "date": "Date",
     "cashback": "Cashback",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "tabs": {
+      "overview": "Overview",
+      "orders": "Orders",
+      "settings": "Settings"
+    },
+    "settings": {
+      "profileInfo": "Profile Information",
+      "security": "Security",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Enter your username",
+      "emailLabel": "Email Address",
+      "passwordLabel": "New Password",
+      "passwordPlaceholder": "Enter new password",
+      "currentPasswordLabel": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "saveChanges": "Save Changes",
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Error updating profile",
+      "noPasswordSSO": "Register with a password to enable extra security features."
+    }
+  },
+  "Auth": {
+    "login": "Sign In",
+    "register": "Create Account",
+    "email": "Email Address",
+    "emailPlaceholder": "example@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "username": "Username",
+    "usernamePlaceholder": "What should we call you",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "submitLogin": "Enter Now",
+    "submitRegister": "Join the Elite",
+    "orContinueWith": "Or continue with",
+    "googleAuth": "Continue with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account yet?",
+    "loginNow": "Login here",
+    "registerNow": "Register for free",
+    "welcomeTitle": "Welcome Back!",
+    "joinTitle": "Join the Elite",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorPasswordsMatch": "Passwords do not match.",
+    "successRegister": "Account created! You can now log in."
   }
 }

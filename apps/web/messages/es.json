@@ -7,7 +7,8 @@
     "fcPlayers": "FC Players",
     "boosting": "Boosting",
     "profile": "Mi Perfil",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "register": "Crear Cuenta"
   },
   "Home": {
     "liveMarketPrices": "Precios de Mercado en Vivo",
@@ -208,6 +209,51 @@
     "amount": "Cantidad",
     "date": "Fecha",
     "cashback": "Cashback",
-    "viewDetails": "Ver Detalles"
+    "viewDetails": "Ver Detalles",
+    "tabs": {
+      "overview": "Resumen",
+      "orders": "Mis Pedidos",
+      "settings": "Ajustes"
+    },
+    "settings": {
+      "profileInfo": "Información del Perfil",
+      "security": "Seguridad",
+      "usernameLabel": "Nombre de Usuario",
+      "usernamePlaceholder": "Ingresá tu nombre",
+      "emailLabel": "Correo Electrónico",
+      "passwordLabel": "Nueva Contraseña",
+      "passwordPlaceholder": "Ingresá nueva contraseña",
+      "currentPasswordLabel": "Contraseña Actual",
+      "currentPasswordPlaceholder": "Ingresá contraseña actual",
+      "saveChanges": "Guardar Cambios",
+      "updateSuccess": "Perfil actualizado con éxito",
+      "updateError": "Error al actualizar perfil",
+      "noPasswordSSO": "Regístrate con una contraseña para habilitar funciones de seguridad extras."
+    }
+  },
+  "Auth": {
+    "login": "Iniciar Sesión",
+    "register": "Crear Cuenta",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "ejemplo@correo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresá tu contraseña",
+    "username": "Nombre de Usuario",
+    "usernamePlaceholder": "Cómo quieres que te llamemos",
+    "confirmPassword": "Confirmar Contraseña",
+    "confirmPasswordPlaceholder": "Repetí tu contraseña",
+    "submitLogin": "Entrar ahora",
+    "submitRegister": "Unirme a la Élite",
+    "orContinueWith": "O continuar con",
+    "googleAuth": "Ingresar con Google",
+    "alreadyHaveAccount": "¿Ya tenés cuenta?",
+    "dontHaveAccount": "¿No tenés cuenta todavía?",
+    "loginNow": "Ingresá acá",
+    "registerNow": "Registrate gratis",
+    "welcomeTitle": "¡Bienvenido de nuevo!",
+    "joinTitle": "Únete a la Élite",
+    "errorGeneric": "Ocurrió un error. Intenta de nuevo.",
+    "errorPasswordsMatch": "Las contraseñas no coinciden.",
+    "successRegister": "¡Cuenta creada! Ya puedes ingresar."
   }
 }
