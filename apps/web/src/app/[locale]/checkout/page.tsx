@@ -48,6 +48,8 @@ function CheckoutContent() {
   const [email, setEmail] = useState('');
   const [userCountry, setUserCountry] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [useWallet, setUseWallet] = useState(false);
 
   const isArgentina = userCountry === 'AR';
 
@@ -72,13 +74,35 @@ function CheckoutContent() {
         }
       })
       .catch(() => {});
+
+    // Fetch Wallet Balance if logged in
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      fetch(`${API_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.wallet_balance) {
+          setWalletBalance(parseFloat(data.wallet_balance));
+        }
+      })
+      .catch(err => console.error('Error fetching wallet balance:', err));
+    }
   }, []);
 
   const coins = searchParams.get('coins') || '0';
   const price = searchParams.get('price') || '0';
   const platform = searchParams.get('platform') || 'PS';
   const parsedPrice = parseFloat(price);
+  
+  // Wallet Discount Logic
+  const walletDiscountUSD = useWallet ? Math.min(parsedPrice, walletBalance) : 0;
+  const finalPriceUSD = Math.max(0, parsedPrice - walletDiscountUSD);
+  
   const priceARS = exchangeRate ? Math.round(parsedPrice * exchangeRate) : 0;
+  const walletDiscountARS = exchangeRate ? Math.round(walletDiscountUSD * exchangeRate) : 0;
+  const finalPriceARS = Math.max(0, priceARS - walletDiscountARS);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0];
@@ -115,6 +139,7 @@ function CheckoutContent() {
           coin_amount: parseInt(coins),
           paymentMethod: method,
           platform,
+          wallet_used: walletDiscountUSD,
         }),
       });
 
@@ -138,7 +163,7 @@ function CheckoutContent() {
             orderId,
             title: `FC 26 Coins - ${parseInt(coins).toLocaleString()} coins`,
             quantity: 1,
-            unitPrice: parseFloat(price),
+            unitPrice: finalPriceUSD,
             buyerEmail: email,
           }),
         });
@@ -147,6 +172,12 @@ function CheckoutContent() {
 
         const mpData = await mpRes.json();
         window.location.href = mpData.sandboxInitPoint || mpData.initPoint;
+        return;
+      }
+
+      // Handle Full Wallet Payment (No Gateway needed)
+      if (finalPriceUSD <= 0) {
+        router.push(`/${locale}/order/${orderId}/setup`);
         return;
       }
 
@@ -327,17 +358,48 @@ function CheckoutContent() {
                 <span className="text-gray-600 dark:text-gray-500 font-medium">{t('serviceFee')}</span>
                 <span className="text-neon-light dark:text-neon font-bold">{t('free')}</span>
               </div>
+
+              {walletBalance > 0 && (
+                <div className="pt-4 mt-4 border-t border-black/5 dark:border-white/5 space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-neon-light/5 dark:bg-neon/5 border border-neon-light/10 dark:border-neon/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-neon-light/10 dark:bg-neon/10 flex items-center justify-center text-neon-light dark:text-neon">
+                        <Wallet className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none mb-1">Tu Saldo</p>
+                        <p className="text-sm font-black text-neon-light dark:text-neon italic tracking-tight">${walletBalance.toFixed(2)} USD</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setUseWallet(!useWallet)}
+                      className={`relative w-10 h-6 rounded-full transition-colors duration-300 ${useWallet ? 'bg-neon-light dark:bg-neon' : 'bg-gray-300 dark:bg-gray-800'}`}
+                    >
+                      <motion.div
+                        animate={{ x: useWallet ? 18 : 2 }}
+                        className="absolute top-1 left-0 w-4 h-4 bg-white rounded-full shadow-md"
+                      />
+                    </button>
+                  </div>
+                  {useWallet && (
+                    <div className="flex justify-between items-center text-[10px] font-bold text-neon-light dark:text-neon uppercase tracking-widest px-1">
+                      <span>Descuento aplicado</span>
+                      <span>-{isArgentina && exchangeRate ? `$${walletDiscountARS.toLocaleString('es-AR')} ARS` : `$${walletDiscountUSD.toFixed(2)} USD`}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="pt-6 border-t border-black/5 dark:border-white/5 flex justify-between items-end">
               <div>
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">{t('totalToPay')}</span>
                 <span className="text-4xl font-black text-[#1A1A1A] dark:text-white italic tracking-tighter">
-                  {isArgentina && exchangeRate ? `$${priceARS.toLocaleString('es-AR')} ARS` : `$${parsedPrice.toFixed(2)} USD`}
+                  {isArgentina && exchangeRate ? `$${finalPriceARS.toLocaleString('es-AR')} ARS` : `$${finalPriceUSD.toFixed(2)} USD`}
                 </span>
                 {isArgentina && exchangeRate && (
                   <span className="text-xs text-gray-500 font-bold block mt-1">
-                    (${parsedPrice.toFixed(2)} USD)
+                    (${finalPriceUSD.toFixed(2)} USD)
                   </span>
                 )}
               </div>

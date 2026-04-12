@@ -13,7 +13,9 @@ import {
   Eye, 
   EyeOff,
   Database,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle,
+  Play
 } from 'lucide-react';
 
 interface OrderAdmin {
@@ -32,6 +34,7 @@ interface OrderAdmin {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderAdmin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<Record<string, boolean>>({});
   const [showCreds, setShowCreds] = useState<Record<string, boolean>>({});
 
   const fetchOrders = async () => {
@@ -55,6 +58,31 @@ export default function AdminOrdersPage() {
 
   const toggleCreds = (orderId: string) => {
     setShowCreds(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, payload: any) => {
+    setUpdating(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const backendUrl = API_URL;
+      const response = await fetch(`${backendUrl}/orders/${orderId}/admin-update`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to update order');
+      
+      // Refresh only this order in the list if possible, or refetch all
+      fetchOrders();
+    } catch (error) {
+      console.error(error);
+      alert('Error updating order');
+    } finally {
+      setUpdating(prev => ({ ...prev, [orderId]: false }));
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -108,9 +136,19 @@ export default function AdminOrdersPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">#{order.id.split('-')[0]}</span>
                     <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                      order.status === 'PAID' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'
+                      order.status === 'PAID' ? 'bg-green-500/10 text-green-500' : 
+                      order.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500' : 
+                      'bg-red-500/10 text-red-500'
                     }`}>
                       {order.status}
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                      order.transfer_status === 'COMPLETED' ? 'bg-green-500/10 text-green-500' : 
+                      order.transfer_status === 'ERROR' ? 'bg-red-500/10 text-red-500' : 
+                      order.transfer_status === 'QUEUED' ? 'bg-blue-500/10 text-blue-500' : 
+                      'bg-gray-500/10 text-gray-500'
+                    }`}>
+                      BOT: {order.transfer_status}
                     </div>
                   </div>
                   <h3 className="text-xl font-black text-[#1A1A1A] dark:text-white uppercase italic">{order.user_email}</h3>
@@ -175,12 +213,30 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Status Update (Manual) */}
-                <div className="flex flex-row lg:flex-col gap-2">
-                  <button className="flex-1 lg:flex-none px-6 py-3 bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 rounded-xl text-[10px] font-black text-neon-light dark:text-neon uppercase tracking-widest hover:bg-neon-light dark:hover:bg-neon hover:text-white dark:hover:text-black transition-all">
+                <div className="flex flex-row lg:flex-col gap-2 min-w-[160px]">
+                  <button 
+                    disabled={updating[order.id] || order.status === 'PAID'}
+                    onClick={() => handleUpdateOrderStatus(order.id, { status: 'PAID' })}
+                    className="flex-1 lg:flex-none px-6 py-3 bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 rounded-xl text-[10px] font-black text-neon-light dark:text-neon uppercase tracking-widest hover:bg-neon-light dark:hover:bg-neon hover:text-white dark:hover:text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {updating[order.id] ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                     Aprobar Pago
                   </button>
-                  <button className="flex-1 lg:flex-none px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-black text-red-500 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
-                     Marcar Error
+                  <button 
+                    disabled={updating[order.id] || order.transfer_status === 'ERROR'}
+                    onClick={() => handleUpdateOrderStatus(order.id, { transfer_status: 'ERROR' })}
+                    className="flex-1 lg:flex-none px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-black text-red-500 uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {updating[order.id] ? <RefreshCw className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
+                    Marcar Error
+                  </button>
+                  <button 
+                    disabled={updating[order.id] || order.status !== 'PAID'}
+                    onClick={() => handleUpdateOrderStatus(order.id, { transfer_status: 'QUEUED' })}
+                    className="flex-1 lg:flex-none px-6 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-[10px] font-black text-blue-500 uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {updating[order.id] ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                    Reintentar Bot
                   </button>
                 </div>
               </motion.div>

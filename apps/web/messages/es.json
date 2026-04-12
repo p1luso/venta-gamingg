@@ -8,7 +8,8 @@
     "boosting": "Boosting",
     "profile": "Mi Perfil",
     "logout": "Cerrar Sesión",
-    "register": "Crear Cuenta"
+    "register": "Crear Cuenta",
+    "adminPanel": "Panel Admin"
   },
   "Home": {
     "liveMarketPrices": "Precios de Mercado en Vivo",

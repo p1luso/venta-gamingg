@@ -17,7 +17,7 @@ export default function Navbar() {
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; role?: string } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [countryCode, setCountryCode] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -68,7 +68,10 @@ export default function Navbar() {
       window.history.replaceState({}, document.title, window.location.pathname);
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const userData = { name: payload.username || payload.name || payload.email || 'User' };
+        const userData = { 
+          name: payload.username || payload.name || payload.email || 'User',
+          role: payload.role 
+        };
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
       } catch (e) {
@@ -76,7 +79,25 @@ export default function Navbar() {
       }
     } else {
       const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedUser) {
+        let parsedUser = JSON.parse(storedUser);
+        
+        // Migration: If role is missing, try to get it from token payload
+        if (!parsedUser.role) {
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              if (payload.role) {
+                parsedUser.role = payload.role;
+                localStorage.setItem('user', JSON.stringify(parsedUser));
+              }
+            } catch (e) {}
+          }
+        }
+        
+        setUser(parsedUser);
+      }
     }
 
     return () => window.removeEventListener('scroll', handleScroll);
@@ -247,8 +268,19 @@ export default function Navbar() {
                           <User className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-[var(--color-neon-light)] dark:group-hover:text-neon" />
                           <span className="text-sm font-bold uppercase italic tracking-tight">{t('profile')}</span>
                         </Link>
+
+                        {user.role === 'ADMIN' && (
+                          <Link
+                            href={`/${currentLocale}/admin/orders`}
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-[#00FF88]/10 hover:text-[var(--color-neon-light)] dark:hover:text-neon group transition-all text-black dark:text-white"
+                          >
+                            <LayoutGrid className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-[var(--color-neon-light)] dark:group-hover:text-neon" />
+                            <span className="text-sm font-bold uppercase italic tracking-tight">{t('adminPanel')}</span>
+                          </Link>
+                        )}
                         
-                        <div className="h-px bg-black/10 dark:bg-white/10 my-1 mx-2" />
+                        <div className="h-px bg-black/5 dark:bg-white/5 my-1 mx-2" />
                         
                         <button
                           onClick={handleLogout}
@@ -325,6 +357,22 @@ export default function Navbar() {
                       <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('profile')}</span>
                     </div>
                   </Link>
+
+                  {user.role === 'ADMIN' && (
+                    <Link
+                      href={`/${currentLocale}/admin/orders`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-black/5 dark:bg-[#121212] border border-black/5 dark:border-white/5 active:scale-95 transition-all text-black dark:text-white"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 shrink-0">
+                        <LayoutGrid className="w-5 h-5 text-orange-500" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-base font-black uppercase italic tracking-tight">{t('adminPanel')}</span>
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Control Panel</span>
+                      </div>
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-4 px-5 py-5 rounded-2xl bg-red-500/5 border border-red-500/10 active:scale-95 transition-all text-red-500"

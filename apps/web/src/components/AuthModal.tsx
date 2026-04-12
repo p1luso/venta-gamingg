@@ -88,6 +88,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
         localStorage.setItem('auth_token', data.access_token);
         localStorage.setItem('user', JSON.stringify({ 
           name: data.user.username || data.user.email,
+          role: data.user.role,
           id: data.user.id
         }));
         window.location.reload();
