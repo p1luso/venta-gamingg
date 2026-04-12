@@ -197,7 +197,7 @@ export default function ProfilePage() {
                 <div className="flex justify-between items-end">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                     {profile.tierProgress.nextTier 
-                      ? t('xpToNext', { amount: profile.tierProgress.xpToNextTier, tier: profile.tierProgress.nextTier })
+                      ? t('xpToNext', { amount: profile.tierProgress.xpToNextTier ?? 0, tier: profile.tierProgress.nextTier })
                       : t('maxTierReached')
                     }
                   </p>
