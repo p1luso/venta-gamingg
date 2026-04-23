@@ -2,12 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Star, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 export default function Footer({ tpScore = '4.8', tpTotal = 500 }) {
+    const locale = useLocale();
     const t = useTranslations('Footer');
 
     return (
@@ -77,9 +79,9 @@ export default function Footer({ tpScore = '4.8', tpTotal = 500 }) {
                     <div>
                         <h4 className="text-gray-900 dark:text-white font-bold mb-6 text-sm uppercase tracking-widest">{t('legal')}</h4>
                         <ul className="space-y-4 text-sm text-gray-600 dark:text-gray-500 font-medium">
-                            <li><Link href="/terminos" className="hover:text-[#00FF88] transition-colors">{t('terms')}</Link></li>
-                            <li><Link href="/privacy" className="hover:text-[#00FF88] transition-colors">{t('privacy')}</Link></li>
-                            <li><Link href="/reembolsos" className="hover:text-[#00FF88] transition-colors">{t('refund')}</Link></li>
+                            <li><Link href={`/${locale}/terminos`} className="hover:text-[#00FF88] transition-colors">{t('terms')}</Link></li>
+                            <li><Link href={`/${locale}/privacy`} className="hover:text-[#00FF88] transition-colors">{t('privacy')}</Link></li>
+                            <li><Link href={`/${locale}/reembolsos`} className="hover:text-[#00FF88] transition-colors">{t('refund')}</Link></li>
                         </ul>
                     </div>
 
