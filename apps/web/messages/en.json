@@ -116,7 +116,11 @@
     "payNow": "Pay Now",
     "terms": "By clicking \"Pay Now\", you agree to our Terms of Service.",
     "orderReceived": "Order Received!",
-    "thankYou": "Thank you for your purchase. We're processing your coins now. You'll receive an email shortly."
+    "thankYou": "Thank you for your purchase. We're processing your coins now. You'll receive an email shortly.",
+    "platform": "Platform",
+    "yourBalance": "Your Balance",
+    "discountApplied": "Discount Applied",
+    "recommended": "Recommended"
   },
   "FCCoins": {
     "title": "BUY <span class=\"text-[#00FF88]\">FC 26</span> COINS",

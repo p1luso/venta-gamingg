@@ -135,7 +135,6 @@ function CheckoutContent() {
           ...authHeaders,
         },
         body: JSON.stringify({
-          user_email: email,
           coin_amount: parseInt(coins),
           paymentMethod: method,
           platform,
@@ -151,7 +150,13 @@ function CheckoutContent() {
       const orderData = await orderRes.json();
       const orderId = orderData.order.id;
 
-      // Step 2: Handle payment based on method
+      // Step 2: Handle Full Wallet Payment (No Gateway needed)
+      if (finalPriceUSD <= 0) {
+        router.push(`/${locale}/order/${orderId}/setup`);
+        return;
+      }
+
+      // Step 3: Handle payment based on method
       if (method === 'MERCADOPAGO') {
         const mpRes = await fetch(`${backendUrl}/payments/mercadopago`, {
           method: 'POST',
@@ -175,11 +180,6 @@ function CheckoutContent() {
         return;
       }
 
-      // Handle Full Wallet Payment (No Gateway needed)
-      if (finalPriceUSD <= 0) {
-        router.push(`/${locale}/order/${orderId}/setup`);
-        return;
-      }
 
       if (method === 'TRANSFER' && file) {
         const formData = new FormData();
@@ -345,7 +345,7 @@ function CheckoutContent() {
                 <span className="text-[#1A1A1A] dark:text-white font-bold italic">{parseInt(coins).toLocaleString()} FC 26 Coins</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('platform') || 'Platform'}</span>
+                <span className="text-gray-600 dark:text-gray-500 font-medium">{t('platform')}</span>
                 <span className="text-[#1A1A1A] dark:text-white font-bold italic uppercase">{platform}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -367,7 +367,7 @@ function CheckoutContent() {
                         <Wallet className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none mb-1">Tu Saldo</p>
+                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none mb-1">{t('yourBalance')}</p>
                         <p className="text-sm font-black text-neon-light dark:text-neon italic tracking-tight">${walletBalance.toFixed(2)} USD</p>
                       </div>
                     </div>
@@ -383,7 +383,7 @@ function CheckoutContent() {
                   </div>
                   {useWallet && (
                     <div className="flex justify-between items-center text-[10px] font-bold text-neon-light dark:text-neon uppercase tracking-widest px-1">
-                      <span>Descuento aplicado</span>
+                      <span>{t('discountApplied')}</span>
                       <span>-{isArgentina && exchangeRate ? `$${walletDiscountARS.toLocaleString('es-AR')} ARS` : `$${walletDiscountUSD.toFixed(2)} USD`}</span>
                     </div>
                   )}
@@ -462,6 +462,7 @@ function PaymentOption({
   subtitle: string,
   highlight?: boolean
 }) {
+  const t = useTranslations('Checkout');
   return (
     <button
       onClick={onClick}
@@ -472,7 +473,7 @@ function PaymentOption({
     >
       {highlight && !active && (
         <div className="absolute top-0 right-0 bg-neon-light dark:bg-neon text-white dark:text-black text-[10px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">
-          Recommended
+          {t('recommended')}
         </div>
       )}
       <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${active ? 'bg-neon-light dark:bg-neon text-white dark:text-black' : 'bg-black/5 dark:bg-white/5 text-gray-500 dark:text-gray-400 group-hover:text-[#1A1A1A] dark:group-hover:text-white'

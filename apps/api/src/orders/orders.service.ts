@@ -3,6 +3,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminUpdateOrderDto } from './dto/admin-update-order.dto';
 import { UpdateSetupDto } from './dto/update-setup.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { OrderStatus, Platform, TransferStatus, TransferMethod } from '@prisma/client';
 import { EncryptionService } from '../common/services/encryption.service';
 import { TransferService } from '../transfer/transfer.service';
@@ -25,21 +26,23 @@ export class OrdersService {
     private prisma: PrismaService,
     private encryptionService: EncryptionService,
     private transferService: TransferService,
+    private loyaltyService: LoyaltyService,
   ) {}
 
-  // ── Public / checkout ───────────────────────────────────────────────────────
+  // ── Public / checkout ───────────────────────────────────────────
 
-  async create(createOrderDto: CreateOrderDto) {
-    const { coin_amount, paymentMethod, user_email, platform, wallet_used, transferMethod } = createOrderDto;
-
-    let user = await this.prisma.user.findUnique({ where: { email: user_email } });
-    if (!user) {
-      user = await this.prisma.user.create({ data: { email: user_email } });
-    }
+  async create(userId: string, createOrderDto: CreateOrderDto) {
+    const { coin_amount, paymentMethod, platform, wallet_used, transferMethod } =
+      createOrderDto;
+ 
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
 
     const price_paid = this.calculatePrice(coin_amount);
     const walletDeduction = wallet_used ?? 0;
-    this.logger.log(`Creating order for ${user.id}. Amount: ${coin_amount}, Price: ${price_paid}, WalletUsed: ${walletDeduction}`);
+    this.logger.log(
+      `Creating order for ${user.id}. Amount: ${coin_amount}, Price: ${price_paid}, WalletUsed: ${walletDeduction}`,
+    );
 
     try {
       const order = await this.prisma.$transaction(async (tx) => {
@@ -49,7 +52,6 @@ export class OrdersService {
             data: { wallet_balance: { decrement: walletDeduction } },
           });
         }
-
         return tx.order.create({
           data: {
             user_id: user.id,
@@ -60,12 +62,10 @@ export class OrdersService {
             platform: platform ?? Platform.PS,
             transfer_status: TransferStatus.WAITING_CREDS,
             wallet_used: walletDeduction,
+            transferMethod: transferMethod ?? TransferMethod.COMFORT_TRADE,
           },
         });
       });
-
-      const receiptUrl = 'receipt' in createOrderDto ? createOrderDto['receipt'] : 'N/A';
-      this.logger.log(`[WA_ALERT] Nueva Orden #${order.id} - Comprobante: ${receiptUrl}`);
 
       return {
         message: 'Order created successfully',
@@ -75,6 +75,7 @@ export class OrdersService {
           price_paid: order.price_paid,
           status: order.status,
           platform: order.platform,
+          transferMethod: order.transferMethod,
         },
       };
     } catch (error) {
@@ -89,12 +90,17 @@ export class OrdersService {
     return order;
   }
 
-  async updateCredentials(id: string, data: { email: string; password: string; backupCodes: string[] }) {
+  async updateCredentials(
+    id: string,
+    data: { email: string; password: string; backupCodes: string[] },
+  ) {
     const encryptedEmail = this.encryptionService.encrypt(data.email);
     const encryptedPassword = this.encryptionService.encrypt(data.password);
-    const encryptedBackupCodes = this.encryptionService.encrypt(JSON.stringify(data.backupCodes));
+    const encryptedBackupCodes = this.encryptionService.encrypt(
+      JSON.stringify(data.backupCodes),
+    );
 
-    const order = await this.prisma.order.update({
+    await this.prisma.order.update({
       where: { id },
       data: {
         ea_email: encryptedEmail,
@@ -108,28 +114,41 @@ export class OrdersService {
       await this.transferService.startFutTransfer(id);
       this.logger.log(`FUT Transfer started for order ${id}`);
     } catch (error) {
-      this.logger.error(`Failed to start FUT Transfer for order ${id}: ${error.message}`);
+      this.logger.error(
+        `Failed to auto-start FUT transfer for order ${id}: ${error.message}`,
+      );
+      // Don't rethrow — credentials are saved, operator can retry manually
     }
 
-    return order;
+    return { message: 'Credentials saved. Transfer queued.' };
   }
 
-
   /**
-   * Unified setup endpoint — handles both COMFORT_TRADE (EA credentials)
-   * and PLAYER_AUCTION (player info). Only COMFORT_TRADE triggers the bot.
+   * Unified setup endpoint: saves EA credentials (COMFORT_TRADE) or auction
+   * data (PLAYER_AUCTION). Called from the order setup page.
    */
   async saveSetupData(id: string, dto: UpdateSetupDto) {
     const order = await this.prisma.order.findUnique({ where: { id } });
     if (!order) throw new NotFoundException(`Order ${id} not found`);
 
+    // ── PLAYER_AUCTION path: save auction data, no bot trigger ─────────
     if (dto.transferMethod === TransferMethod.PLAYER_AUCTION) {
-      // Save auction data and flag for manual admin processing — no bot trigger
+      if (
+        !dto.auctionPlayerName ||
+        dto.auctionPlayerRating == null ||
+        dto.auctionStartPrice == null ||
+        dto.auctionBuyNowPrice == null
+      ) {
+        throw new BadRequestException(
+          'auctionPlayerName, auctionPlayerRating, auctionStartPrice and auctionBuyNowPrice are required for PLAYER_AUCTION',
+        );
+      }
+
       await this.prisma.order.update({
         where: { id },
         data: {
           transferMethod: TransferMethod.PLAYER_AUCTION,
-          transfer_status: TransferStatus.QUEUED, // admin sees it as pending
+          transfer_status: TransferStatus.QUEUED, // visible to admin as pending
           auctionPlayerName: dto.auctionPlayerName,
           auctionPlayerRating: dto.auctionPlayerRating,
           auctionStartPrice: dto.auctionStartPrice,
@@ -139,15 +158,17 @@ export class OrdersService {
 
       this.logger.log(
         `[Setup] Order ${id} → PLAYER_AUCTION: ${dto.auctionPlayerName} (${dto.auctionPlayerRating}★) ` +
-        `start=$${dto.auctionStartPrice} buynow=$${dto.auctionBuyNowPrice}`,
+          `start=$${dto.auctionStartPrice} buynow=$${dto.auctionBuyNowPrice}`,
       );
 
       return { message: 'Auction data saved. Awaiting manual processing.' };
     }
 
-    // COMFORT_TRADE — encrypt credentials and trigger bot
+    // ── COMFORT_TRADE path: encrypt credentials and trigger bot ──────
     if (!dto.email || !dto.password || !dto.backupCodes?.length) {
-      throw new Error('email, password and backupCodes are required for COMFORT_TRADE');
+      throw new BadRequestException(
+        'email, password and backupCodes are required for COMFORT_TRADE',
+      );
     }
 
     return this.updateCredentials(id, {
@@ -157,9 +178,9 @@ export class OrdersService {
     });
   }
 
-  // ── Admin ───────────────────────────────────────────────────────────────────
+  // ── Admin ──────────────────────────────────────────────
 
-  /** Returns ALL orders with basic user info, newest first. No credentials in payload. */
+  /** Returns ALL orders with basic user info, newest first. */
   async findAll() {
     return this.prisma.order.findMany({
       orderBy: { created_at: 'desc' },
@@ -169,15 +190,13 @@ export class OrdersService {
 
   /**
    * Manual admin override: update payment status and/or transfer status.
-   * Typical use-cases:
-   *   - Approve a bank transfer   → { status: PAID }
-   *   - Retry a failed transfer   → { transfer_status: QUEUED }
    */
   async adminUpdate(id: string, dto: AdminUpdateOrderDto) {
     if (!dto.status && !dto.transfer_status) {
-      throw new BadRequestException('Provide at least one field to update (status or transfer_status)');
+      throw new BadRequestException(
+        'Provide at least one field to update (status or transfer_status)',
+      );
     }
-
     const order = await this.prisma.order.findUnique({ where: { id } });
     if (!order) throw new NotFoundException(`Order ${id} not found`);
 
@@ -193,11 +212,61 @@ export class OrdersService {
     this.logger.log(
       `[ADMIN] Order ${id} updated — status: ${dto.status ?? '—'}, transfer_status: ${dto.transfer_status ?? '—'}`,
     );
-
     return updated;
   }
 
-  /** Legacy endpoint: returns PAID/PENDING_APPROVAL orders with decrypted credentials for operators. */
+  /**
+   * Demo simulation: marks a PLAYER_AUCTION order as completed and
+   * credits XP + cashback to the buyer instantly.
+   * In production this would be triggered after the team confirms
+   * the player was purchased on the Transfer Market.
+   */
+  async simulateAuctionComplete(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: { select: USER_ADMIN_SELECT } },
+    });
+    if (!order) throw new NotFoundException(`Order ${orderId} not found`);
+
+    if (order.transferMethod !== TransferMethod.PLAYER_AUCTION) {
+      throw new BadRequestException(
+        'simulateAuctionComplete is only valid for PLAYER_AUCTION orders',
+      );
+    }
+
+    if (order.transfer_status === TransferStatus.COMPLETED) {
+      throw new BadRequestException('Order is already completed');
+    }
+
+    // Mark order as paid + completed
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.PAID,
+        transfer_status: TransferStatus.COMPLETED,
+        coins_transferred: order.amount_coins,
+      },
+      include: { user: { select: USER_ADMIN_SELECT } },
+    });
+
+    this.logger.log(
+      `[ADMIN SIMULATE] Order ${orderId} → PLAYER_AUCTION COMPLETED by admin`,
+    );
+
+    // Fire loyalty (XP + cashback) — non-blocking so we still return fast
+    this.loyaltyService
+      .processOrderCompletion(orderId)
+      .catch((err) =>
+        this.logger.error(`[ADMIN SIMULATE] Loyalty failed for ${orderId}: ${err.message}`),
+      );
+
+    return {
+      message: 'Auction order completed. XP and cashback are being credited.',
+      order: updated,
+    };
+  }
+
+  /** Legacy endpoint: returns PAID/PENDING_APPROVAL orders with decrypted credentials. */
   async findAllAdmin() {
     const orders = await this.prisma.order.findMany({
       where: { status: { in: [OrderStatus.PAID, OrderStatus.PENDING_APPROVAL] } },
@@ -208,17 +277,18 @@ export class OrdersService {
       let decodedEmail = order.ea_email;
       let decodedPassword = order.ea_password;
       let decodedBackupCodes: string[] = [];
-
       try {
         if (order.ea_email) decodedEmail = this.encryptionService.decrypt(order.ea_email);
-        if (order.ea_password) decodedPassword = this.encryptionService.decrypt(order.ea_password);
+        if (order.ea_password)
+          decodedPassword = this.encryptionService.decrypt(order.ea_password);
         if (order.ea_backup_codes) {
-          decodedBackupCodes = JSON.parse(this.encryptionService.decrypt(order.ea_backup_codes));
+          decodedBackupCodes = JSON.parse(
+            this.encryptionService.decrypt(order.ea_backup_codes),
+          );
         }
       } catch {
         this.logger.error(`Failed to decrypt credentials for order ${order.id}`);
       }
-
       return {
         ...order,
         ea_email_decrypted: decodedEmail,
@@ -228,7 +298,7 @@ export class OrdersService {
     });
   }
 
-  // ── User ────────────────────────────────────────────────────────────────────
+  // ── User ──────────────────────────────────────────────
 
   /** Returns authenticated user's own orders, newest first. */
   async myOrders(userId: string) {
@@ -242,6 +312,7 @@ export class OrdersService {
         status: true,
         platform: true,
         transfer_status: true,
+        transferMethod: true,
         cashback_earned: true,
         wallet_used: true,
         created_at: true,

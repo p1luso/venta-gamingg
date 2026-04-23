@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Zap,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { API_URL } from '@/lib/api';
 
@@ -124,20 +125,56 @@ export default function OrderSetupPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const [transferData, setTransferData] = useState<TransferStatusData | null>(null);
+  const [orderData, setOrderData] = useState<any>(null);
   const [pollError, setPollError] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Cache the token once on mount — avoids a localStorage read on every poll tick.
   const authTokenRef = useRef<string | null>(null);
+
+  // ── Initial check: is order already beyond WAITING_CREDS? ───────────────
   useEffect(() => {
-    authTokenRef.current = localStorage.getItem('auth_token');
-  }, []);
+    const token = localStorage.getItem('auth_token');
+    authTokenRef.current = token;
+
+    const checkInitialStatus = async () => {
+      if (!token) {
+        setInitialLoading(false);
+        return;
+      }
+      try {
+        console.log(`[OrderSetup] Fetching initial status for ${orderId}`);
+        const res = await fetch(`${API_URL}/orders/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const order = await res.json();
+          setOrderData(order);
+          console.log(`[OrderSetup] Order data received: status=${order.status}, transfer=${order.transfer_status}`);
+          
+          // If order is already PAID and beyond WAITING_CREDS, skip the form
+          if (order.transfer_status && order.transfer_status !== 'WAITING_CREDS') {
+            setIsSubmitted(true);
+          }
+        } else {
+          console.error(`[OrderSetup] Failed to fetch order: ${res.status}`);
+        }
+      } catch (error) {
+        console.error('[OrderSetup] Error fetching initial order status:', error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    checkInitialStatus();
+  }, [orderId]);
 
   // Hold the interval ID so the fetchStatus callback can clear it on terminal states.
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStatus = useCallback(async () => {
     const token = authTokenRef.current;
-    if (!token) return; // Not authenticated — can't query the JWT-protected endpoint.
+    if (!token) return;
 
     try {
       const res = await fetch(`${API_URL}/transfer/status/${orderId}`, {
@@ -150,21 +187,17 @@ export default function OrderSetupPage() {
       }
 
       const data: TransferStatusData = await res.json();
-
-      // Change-detection guard: skip re-render if status + progress haven't changed.
       setTransferData((prev) => {
         if (
           prev?.transfer_status === data.transfer_status &&
           prev?.progress === data.progress
         ) {
-          return prev; // same reference → React bails out of re-render
+          return prev;
         }
         return data;
       });
-
       setPollError(false);
 
-      // Stop polling once we reach a terminal state.
       if (data.transfer_status === 'COMPLETED' || data.transfer_status === 'ERROR') {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
@@ -212,6 +245,18 @@ export default function OrderSetupPage() {
       setIsSubmitting(false);
     }
   };
+
+  // ── Initial loading state ──────────────────────────────────────────────────
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0A0A0A]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-neon animate-spin" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs italic">Cargando detalles de tu orden...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ── Tracking screen (post-submission) ───────────────────────────────────────
   if (isSubmitted) {
@@ -267,25 +312,22 @@ export default function OrderSetupPage() {
           </motion.div>
 
           <div className="bg-white dark:bg-[#161616] border border-black/5 dark:border-white/5 rounded-3xl p-8 shadow-xl dark:shadow-none space-y-8">
-            {/* Status badge */}
             <div className="flex justify-center">
               {hasData ? (
                 <StatusBadge status={transferData.transfer_status} message={transferData.message} />
               ) : (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Iniciando proceso...
+                  Actualizando estado...
                 </div>
               )}
             </div>
 
-            {/* Progress bar */}
             <ProgressBar
               progress={transferData?.progress ?? 5}
               status={transferData?.transfer_status ?? 'QUEUED'}
             />
 
-            {/* Coins stats */}
             {hasData && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-4 text-center">
@@ -307,7 +349,6 @@ export default function OrderSetupPage() {
               </div>
             )}
 
-            {/* ETA */}
             {hasData &&
               transferData.estimated_minutes_remaining !== null &&
               transferData.estimated_minutes_remaining > 0 && (
@@ -319,29 +360,16 @@ export default function OrderSetupPage() {
                 </p>
               )}
 
-            {/* Error state */}
             {isError && (
               <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                  Ocurrió un error durante la transferencia. Por favor contacta soporte con tu
-                  ID de orden.
+                  {transferData.message || 'Ocurrió un error. Por favor contacta soporte.'}
                 </p>
               </div>
             )}
-
-            {/* Poll error / no-auth fallback */}
-            {!hasData && (
-              <p className="text-center text-[10px] text-gray-400 font-medium">
-                {pollError
-                  ? 'No se puede obtener estado en tiempo real. Recibirás una notificación al completarse.'
-                  : 'Actualizando estado automáticamente cada 5 segundos...'}
-              </p>
-            )}
           </div>
-
           <p className="mt-8 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-            El proceso suele demorar de 15 a 60 minutos. <br />
             Puedes cerrar esta ventana — te notificaremos al completarse.
           </p>
         </div>
@@ -350,136 +378,157 @@ export default function OrderSetupPage() {
   }
 
   // ── Credential form ──────────────────────────────────────────────────────────
+  const isPaid = orderData?.status === 'PAID';
+
   return (
     <div className="min-h-screen pt-32 pb-20 px-6 bg-white dark:bg-[#0A0A0A]">
       <div className="max-w-2xl mx-auto">
         <div className="mb-12 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 mb-6">
-            <ShieldCheck className="w-4 h-4 text-neon-light dark:text-neon" />
-            <span className="text-[10px] font-black text-neon-light dark:text-neon uppercase tracking-widest">
-              Pago Confirmado
-            </span>
-          </div>
+          {isPaid ? (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon-light/10 dark:bg-neon/10 border border-neon-light/20 dark:border-neon/20 mb-6">
+              <ShieldCheck className="w-4 h-4 text-neon-light dark:text-neon" />
+              <span className="text-[10px] font-black text-neon-light dark:text-neon uppercase tracking-widest">
+                Pago Confirmado
+              </span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-6">
+              <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />
+              <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">
+                Esperando Pago...
+              </span>
+            </div>
+          )}
+          
           <h1 className="text-4xl md:text-5xl font-black text-[#1A1A1A] dark:text-white italic uppercase tracking-tighter leading-none mb-4">
-            Configuración de tu <br />{' '}
-            <span className="text-neon-light dark:text-neon">Transferencia</span>
+            {isPaid ? (
+              <>Configuración de tu <br /> <span className="text-neon-light dark:text-neon">Transferencia</span></>
+            ) : (
+              <>Tu orden está <br /> <span className="text-yellow-500">Pendiente</span></>
+            )}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            Necesitamos tus credenciales de EA para que nuestro sistema pueda transferir las
-            monedas de forma segura.
+            {isPaid 
+              ? 'Necesitamos tus credenciales de EA para que nuestro sistema pueda transferir las monedas de forma segura.'
+              : 'Estamos esperando que se confirme el pago de tu orden. Una vez confirmado, podrás configurar tu transferencia aquí.'}
           </p>
-        </div>
-
-        <div className="bg-white dark:bg-[#161616] border border-black/5 dark:border-white/5 rounded-3xl p-8 shadow-xl dark:shadow-none relative overflow-hidden">
-          {/* Security Banner */}
-          <div className="mb-8 p-4 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 rounded-2xl flex items-start gap-3">
-            <Lock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
-                Cifrado de Extremo a Extremo
-              </h4>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium leading-relaxed">
-                Tus datos son encriptados mediante AES-256 antes de guardarse. Solo nuestro
-                sistema de transferencia automatizado podrá acceder a ellos.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">
-                  EA Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={eaEmail}
-                  onChange={(e) => setEaEmail(e.target.value)}
-                  placeholder="tu-email@ejemplo.com"
-                  className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 px-6 text-[#1A1A1A] dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">
-                  EA Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={eaPassword}
-                  onChange={(e) => setEaPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 px-6 text-[#1A1A1A] dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-end px-4">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Backup Codes (3 necesarios)
-                </label>
-                <a
-                  href="https://myaccount.ea.com/cp-ui/security/index"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[9px] font-bold text-neon-light dark:text-neon uppercase tracking-widest flex items-center gap-1 hover:underline"
-                >
-                  ¿Cómo obtenerlos? <ExternalLink className="w-2 h-2" />
-                </a>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {[0, 1, 2].map((idx) => (
-                  <div key={idx} className="space-y-1">
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      pattern="\d{8}"
-                      maxLength={8}
-                      value={backupCodes[idx]}
-                      onChange={(e) => {
-                        // Allow only digits
-                        const val = e.target.value.replace(/\D/g, '');
-                        const updated = [...backupCodes];
-                        updated[idx] = val;
-                        setBackupCodes(updated);
-                      }}
-                      placeholder={`Code ${idx + 1}`}
-                      className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 text-center font-mono text-lg text-[#1A1A1A] dark:text-white focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
-                    />
-                    {backupCodes[idx].length > 0 && backupCodes[idx].length < 8 && (
-                      <p className="text-[9px] text-red-500 font-bold text-center">
-                        8 dígitos requeridos
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting || backupCodes.some((c) => c.length !== 8)}
-              className="w-full neon-button py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_30px_rgba(0,255,136,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group"
+          
+          {!isPaid && (
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#1A1A1A] dark:text-white hover:text-neon transition-colors"
             >
-              {isSubmitting ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <>
-                  Confirmar y Comenzar Transferencia
-                  <Rocket className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                </>
-              )}
+              <RefreshCw className="w-3 h-3" />
+              Ya realicé el pago (Actualizar)
             </button>
-          </form>
+          )}
         </div>
 
-        <p className="mt-8 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-          Al enviar este formulario, confirmas que los datos ingresados son correctos. <br />
-          El proceso de transferencia suele demorar de 15 a 60 minutos.
-        </p>
+        {isPaid && (
+          <div className="bg-white dark:bg-[#161616] border border-black/5 dark:border-white/5 rounded-3xl p-8 shadow-xl dark:shadow-none relative overflow-hidden">
+            <div className="mb-8 p-4 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 rounded-2xl flex items-start gap-3">
+              <Lock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
+                  Cifrado de Extremo a Extremo
+                </h4>
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium leading-relaxed">
+                  Tus datos son encriptados mediante AES-256 antes de guardarse. Solo nuestro
+                  sistema de transferencia automatizado podrá acceder a ellos.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">
+                    EA Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={eaEmail}
+                    onChange={(e) => setEaEmail(e.target.value)}
+                    placeholder="tu-email@ejemplo.com"
+                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 px-6 text-[#1A1A1A] dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">
+                    EA Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={eaPassword}
+                    onChange={(e) => setEaPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 px-6 text-[#1A1A1A] dark:text-white placeholder:text-gray-500 focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end px-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Backup Codes (3 necesarios)
+                  </label>
+                  <a
+                    href="https://myaccount.ea.com/cp-ui/security/index"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[9px] font-bold text-neon-light dark:text-neon uppercase tracking-widest flex items-center gap-1 hover:underline"
+                  >
+                    ¿Cómo obtenerlos? <ExternalLink className="w-2 h-2" />
+                  </a>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[0, 1, 2].map((idx) => (
+                    <div key={idx} className="space-y-1">
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        pattern="\d{8}"
+                        maxLength={8}
+                        value={backupCodes[idx]}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          const updated = [...backupCodes];
+                          updated[idx] = val;
+                          setBackupCodes(updated);
+                        }}
+                        placeholder={`Code ${idx + 1}`}
+                        className="w-full bg-[#FAFAFA] dark:bg-[#0D0D0D] border border-black/5 dark:border-white/5 rounded-2xl py-4 text-center font-mono text-lg text-[#1A1A1A] dark:text-white focus:outline-none focus:border-neon-light dark:focus:border-neon transition-all"
+                      />
+                      {backupCodes[idx].length > 0 && backupCodes[idx].length < 8 && (
+                        <p className="text-[9px] text-red-500 font-bold text-center">
+                          8 dígitos requeridos
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || backupCodes.some((c) => c.length !== 8)}
+                className="w-full neon-button py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_30px_rgba(0,255,136,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    Confirmar y Comenzar Transferencia
+                    <Rocket className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

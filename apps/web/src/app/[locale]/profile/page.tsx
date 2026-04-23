@@ -403,7 +403,11 @@ export default function ProfilePage() {
                         </td>
                       </tr>
                     ) : profile.orders.map((order) => (
-                      <tr key={order.id} className="group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+                      <tr 
+                        key={order.id} 
+                        onClick={() => window.location.href = `/${locale}/order/${order.id}/setup`}
+                        className="group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer"
+                      >
                         <td className="px-8 py-8">
                           <p className="text-xs font-mono font-bold text-gray-500">#{order.id.split('-')[0].toUpperCase()}</p>
                         </td>
@@ -427,9 +431,9 @@ export default function ProfilePage() {
                           <p className="text-[10px] font-bold text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
                         </td>
                         <td className="px-8 py-8 text-right">
-                          <button className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-gray-400 hover:text-neon hover:bg-neon/10 hover:border hover:border-neon/20 transition-all opacity-0 group-hover:opacity-100">
+                          <div className="p-2.5 rounded-xl bg-black/5 dark:bg-white/5 text-gray-400 group-hover:text-neon group-hover:bg-neon/10 group-hover:border group-hover:border-neon/20 transition-all opacity-0 group-hover:opacity-100 inline-block">
                             <ChevronRight className="w-4 h-4" />
-                          </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

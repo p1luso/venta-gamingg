@@ -13,8 +13,8 @@ export class CreateOrderDto {
   @IsNotEmpty()
   paymentMethod: PaymentMethod;
 
-  @IsNotEmpty()
-  user_email: string;
+  @IsOptional()
+  user_email?: string;
 
   @IsEnum(Platform)
   @IsOptional()

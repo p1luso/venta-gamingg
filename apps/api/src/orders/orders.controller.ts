@@ -9,11 +9,12 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  // ── Public ──────────────────────────────────────────────────────────────────
+  // ── Public ──────────────────────────────────────────────
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  create(@Request() req: { user: { userId: string } }, @Body() createOrderDto: CreateOrderDto) {
+    return this.ordersService.create(req.user.userId, createOrderDto);
   }
 
   @Patch(':id/credentials')
@@ -24,7 +25,16 @@ export class OrdersController {
     return this.ordersService.updateCredentials(id, body);
   }
 
-  // ── Admin — declared before /:id to avoid route shadowing ──────────────────
+  /**
+   * PATCH /orders/:id/setup
+   * Unified setup: saves EA credentials (COMFORT_TRADE) or auction data (PLAYER_AUCTION).
+   */
+  @Patch(':id/setup')
+  saveSetupData(@Param('id') id: string, @Body() dto: UpdateSetupDto) {
+    return this.ordersService.saveSetupData(id, dto);
+  }
+
+  // ── Admin — declared before /:id to avoid route shadowing ─────────────────
 
   /** GET /orders — all orders with user info, newest first. JWT required. */
   @UseGuards(JwtAuthGuard)
@@ -49,7 +59,19 @@ export class OrdersController {
     return this.ordersService.adminUpdate(id, dto);
   }
 
-  // ── User ────────────────────────────────────────────────────────────────────
+  /**
+   * POST /orders/:id/simulate-complete
+   * Demo: marks a PLAYER_AUCTION order as COMPLETED and credits cashback/XP.
+   * In production this fires after the operator confirms the player was bought
+   * on the Transfer Market. JWT required (admin only in real deploy).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/simulate-complete')
+  simulateAuctionComplete(@Param('id') id: string) {
+    return this.ordersService.simulateAuctionComplete(id);
+  }
+
+  // ── User ──────────────────────────────────────────────
 
   /** GET /orders/my-orders — authenticated user's own orders. Must come before /:id. */
   @UseGuards(JwtAuthGuard)
@@ -58,17 +80,7 @@ export class OrdersController {
     return this.ordersService.myOrders(req.user.userId);
   }
 
-  /**
-   * PATCH /orders/:id/setup
-   * Unified setup: saves EA credentials (COMFORT_TRADE) or auction data (PLAYER_AUCTION).
-   * Called from the order setup page after the user chooses a transfer method.
-   */
-  @Patch(':id/setup')
-  saveSetupData(@Param('id') id: string, @Body() dto: UpdateSetupDto) {
-    return this.ordersService.saveSetupData(id, dto);
-  }
-
-  /** GET /orders/:id — single order. JWT required. Must come LAST among @Get routes. */
+  /** GET /orders/:id — single order. JWT required. Must come LAST. */
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {

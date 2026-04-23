@@ -116,7 +116,11 @@
     "payNow": "Pagar Ahora",
     "terms": "Al hacer clic en \"Pagar Ahora\", aceptas nuestros Términos de Servicio.",
     "orderReceived": "¡Pedido Recibido!",
-    "thankYou": "Gracias por tu compra. Estamos procesando tus monedas ahora. Recibirás un correo en breve."
+    "thankYou": "Gracias por tu compra. Estamos procesando tus monedas ahora. Recibirás un correo en breve.",
+    "platform": "Plataforma",
+    "yourBalance": "Tu Saldo",
+    "discountApplied": "Descuento Aplicado",
+    "recommended": "Recomendado"
   },
   "FCCoins": {
     "title": "COMPRA MONEDAS <span class=\"text-[#00FF88]\">FC 26</span>",

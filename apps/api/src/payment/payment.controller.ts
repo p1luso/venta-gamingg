@@ -11,7 +11,11 @@ import {
   RawBodyRequest,
   HttpCode,
   ForbiddenException,
+  Get,
+  Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaymentService } from './payment.service';
 import { MercadoPagoService } from './mercadopago.service';
@@ -60,6 +64,25 @@ export class PaymentController {
     @Body() body: { orderId: string; title: string; quantity: number; unitPrice: number; buyerEmail: string },
   ) {
     return this.mpService.createPreference(body);
+  }
+
+  @Get('mercadopago/callback')
+  async mercadoPagoCallback(@Query() query: any, @Res() res: Response) {
+    return this.paymentService.handleMercadoPagoCallback(query, res);
+  }
+
+  /**
+   * GET /payments/mercadopago/callback/:orderId
+   * Primary callback route — orderId is embedded so it always arrives even when
+   * MP Sandbox strips query params. Checks payment status via MP REST API.
+   */
+  @Get('mercadopago/callback/:orderId')
+  async mercadoPagoCallbackWithId(
+    @Param('orderId') orderId: string,
+    @Query() query: any,
+    @Res() res: Response,
+  ) {
+    return this.paymentService.handleMercadoPagoCallbackById(orderId, query, res);
   }
 
   // ── Webhooks (skip global rate-limit — MP/Stripe call these server-to-server)

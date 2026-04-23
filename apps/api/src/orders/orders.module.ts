@@ -3,9 +3,10 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TransferModule } from '../transfer/transfer.module';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
 
 @Module({
-  imports: [PrismaModule, TransferModule],
+  imports: [PrismaModule, TransferModule, LoyaltyModule],
   controllers: [OrdersController],
   providers: [OrdersService],
 })
