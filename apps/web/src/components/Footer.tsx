@@ -77,9 +77,9 @@ export default function Footer({ tpScore = '4.8', tpTotal = 500 }) {
                     <div>
                         <h4 className="text-gray-900 dark:text-white font-bold mb-6 text-sm uppercase tracking-widest">{t('legal')}</h4>
                         <ul className="space-y-4 text-sm text-gray-600 dark:text-gray-500 font-medium">
-                            <li><Link href="/terms" className="hover:text-[#00FF88] transition-colors">{t('terms')}</Link></li>
+                            <li><Link href="/terminos" className="hover:text-[#00FF88] transition-colors">{t('terms')}</Link></li>
                             <li><Link href="/privacy" className="hover:text-[#00FF88] transition-colors">{t('privacy')}</Link></li>
-                            <li><Link href="/refund" className="hover:text-[#00FF88] transition-colors">{t('refund')}</Link></li>
+                            <li><Link href="/reembolsos" className="hover:text-[#00FF88] transition-colors">{t('refund')}</Link></li>
                         </ul>
                     </div>
 
